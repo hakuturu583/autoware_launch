@@ -1,9 +1,12 @@
 files:
-  - { path: $(dirname)/autoware-main.yaml }
+  - { path: $(dirname)/autoware-main_gen2.yaml }
 
 edits:
   - path: /sensing/autonomous_available
     type: remove
 
   - path: /hardware/autonomous_available
+    type: remove
+
+  - path: /foolproof/autonomous_available
     type: remove
