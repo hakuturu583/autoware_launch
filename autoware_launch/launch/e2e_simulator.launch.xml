@@ -9,8 +9,8 @@
   <arg name="simulator_type" default="awsim" description="select the simulator type ('awsim' or 'carla')"/>
 
   <!-- launch module preset -->
-  <arg name="planning_module_preset" default="default" description="planning module preset"/>
-  <arg name="control_module_preset" default="default" description="control module preset"/>
+  <arg name="planning_module_preset" default="xx1" description="planning module preset"/>
+  <arg name="control_module_preset" default="xx1" description="control module preset"/>
 
   <!-- Optional parameters -->
   <!-- Modules to be launched -->
@@ -26,7 +26,7 @@
   <arg name="lanelet2_map_file" default="lanelet2_map.osm" description="lanelet2 map file name"/>
   <arg name="pointcloud_map_file" default="pointcloud_map.pcd" description="pointcloud map file name"/>
   <!-- Perception -->
-  <arg name="traffic_light_namespace" default="[traffic_light]" description="traffic light recognition namespace"/>
+  <arg name="traffic_light_namespace" default="[camera0,camera2,camera5,camera6]" description="traffic light recognition namespace"/>
   <!-- Control -->
   <!-- Vehicle -->
   <arg name="launch_vehicle_interface" default="false"/>
@@ -77,6 +77,11 @@
       <!-- Perception-->
       <arg name="traffic_light_recognition/use_high_accuracy_detection" value="false"/>
       <arg name="traffic_light_recognition/camera_namespaces" value="$(var traffic_light_namespace)"/>
+      <arg name="perception_mode" value="lidar"/>
+      <arg name="use_traffic_light_recognition" value="true"/>
+      <arg name="traffic_light_recognition/enable_fine_detection" value="false"/>
+      <arg name="traffic_light_recognition/fusion_only" value="false"/>
+      <arg name="lidar_detection_model" value="centerpoint"/>
       <!-- Tools -->
       <arg name="rviz" value="$(var rviz)"/>
       <arg name="rviz_config" value="$(var rviz_config)"/>
