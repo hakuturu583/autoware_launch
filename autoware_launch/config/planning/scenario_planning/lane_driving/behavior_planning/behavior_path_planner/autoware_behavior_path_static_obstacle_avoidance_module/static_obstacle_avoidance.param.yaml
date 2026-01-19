@@ -28,7 +28,7 @@
             hard_margin_for_parked_vehicle: 0.7         # [m]
           max_expand_ratio: 0.0                         # [-] FOR DEVELOPER
           envelope_buffer_margin: 0.1                   # [m] FOR DEVELOPER
-          th_error_eclipse_long_radius : 0.6            # [m]
+          th_error_eclipse_long_radius: 0.6            # [m]
         truck:
           th_moving_speed: 1.0
           th_moving_time: 2.0
@@ -39,7 +39,7 @@
             hard_margin_for_parked_vehicle: 0.7
           max_expand_ratio: 0.0
           envelope_buffer_margin: 0.1
-          th_error_eclipse_long_radius : 0.6
+          th_error_eclipse_long_radius: 0.6
         bus:
           th_moving_speed: 1.0
           th_moving_time: 2.0
@@ -50,7 +50,7 @@
             hard_margin_for_parked_vehicle: 0.7
           max_expand_ratio: 0.3
           envelope_buffer_margin: 0.1
-          th_error_eclipse_long_radius : 0.6
+          th_error_eclipse_long_radius: 0.6
         trailer:
           th_moving_speed: 1.0
           th_moving_time: 2.0
@@ -61,7 +61,7 @@
             hard_margin_for_parked_vehicle: 0.7
           max_expand_ratio: 0.0
           envelope_buffer_margin: 0.1
-          th_error_eclipse_long_radius : 0.6
+          th_error_eclipse_long_radius: 0.6
         unknown:
           th_moving_speed: 0.28
           th_moving_time: 1.0
@@ -72,7 +72,7 @@
             hard_margin_for_parked_vehicle: -0.2
           max_expand_ratio: 0.0
           envelope_buffer_margin: 0.1
-          th_error_eclipse_long_radius : 0.6
+          th_error_eclipse_long_radius: 0.6
         bicycle:
           th_moving_speed: 0.28
           th_moving_time: 1.0
@@ -83,7 +83,7 @@
             hard_margin_for_parked_vehicle: 0.5
           max_expand_ratio: 0.0
           envelope_buffer_margin: 0.5
-          th_error_eclipse_long_radius : 0.6
+          th_error_eclipse_long_radius: 0.6
         motorcycle:
           th_moving_speed: 1.0
           th_moving_time: 1.0
@@ -94,7 +94,7 @@
             hard_margin_for_parked_vehicle: 0.3
           max_expand_ratio: 0.0
           envelope_buffer_margin: 0.5
-          th_error_eclipse_long_radius : 0.6
+          th_error_eclipse_long_radius: 0.6
         pedestrian:
           th_moving_speed: 0.28
           th_moving_time: 1.0
@@ -105,7 +105,7 @@
             hard_margin_for_parked_vehicle: 0.5
           max_expand_ratio: 0.0
           envelope_buffer_margin: 0.5
-          th_error_eclipse_long_radius : 0.6
+          th_error_eclipse_long_radius: 0.6
         lower_distance_for_polygon_expansion: 30.0      # [m] FOR DEVELOPER
         upper_distance_for_polygon_expansion: 100.0     # [m] FOR DEVELOPER
 
@@ -227,7 +227,7 @@
         expected_front_deceleration: -1.0               # [m/ss]
         expected_rear_deceleration: -0.9                # [m/ss]
         rear_vehicle_reaction_time: 2.0                 # [s]
-        rear_vehicle_safety_time_margin: 1.2            # [s]
+        rear_vehicle_safety_time_margin: 3.0            # [s]
         lateral_distance_max_threshold: 1.0             # [m]
         longitudinal_distance_min_threshold: 9.0        # [m]
         longitudinal_velocity_delta_time: 0.0           # [s]
