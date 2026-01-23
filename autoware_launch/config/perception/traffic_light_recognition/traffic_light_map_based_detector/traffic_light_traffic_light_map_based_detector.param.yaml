@@ -1,3 +1,4 @@
+# This file is used only when e2e_simulator.launch.xml is launched, or when traffic_light_recognition/fusion_only:=false.
 /**:
   ros__parameters:
     max_vibration_pitch: 0.01745329251   # -0.5 ~ 0.5 deg in camera frame
