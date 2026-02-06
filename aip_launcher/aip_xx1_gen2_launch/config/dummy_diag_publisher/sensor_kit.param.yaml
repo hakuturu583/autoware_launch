@@ -1,0 +1,60 @@
+# Description:
+#   name: diag name
+#   is_active: Force update or not
+#   status: diag status set by dummy diag publisher "OK, Warn, Error, Stale"
+#
+# Note:
+#
+# default values are:
+#   is_active: "true"
+#   status: "OK"
+---
+/**:
+  ros__parameters:
+    required_diags:
+      # imu
+      "topic_state_monitor_imu: sensing_topic_status": default
+
+      #gyro_bias_validator
+      "gyro_bias_validator: gyro_bias_validator": default
+
+      #camera
+      #camera 1, 7 and 8 on the addon ECU are not currently not in use
+      "topic_state_monitor_camera0: sensing_topic_status": default
+      # "topic_state_monitor_camera1: sensing_topic_status": default
+      "topic_state_monitor_camera2: sensing_topic_status": default
+      "topic_state_monitor_camera3: sensing_topic_status": default
+      "topic_state_monitor_camera4: sensing_topic_status": default
+      "topic_state_monitor_camera5: sensing_topic_status": default
+      "topic_state_monitor_camera6: sensing_topic_status": default
+      # "topic_state_monitor_camera7: sensing_topic_status": default
+      # "topic_state_monitor_camera8: sensing_topic_status": default
+      "topic_state_monitor_camera9: sensing_topic_status": default
+      "topic_state_monitor_camera10: sensing_topic_status": default
+
+      #lidar
+      "concatenate_data: /sensing/lidar/concatenate_data": default
+
+      "/sensing/lidar/side_left/hesai_ros_wrapper_node: hesai_status": default
+      "/sensing/lidar/side_left/hesai_ros_wrapper_node: hesai_ptp": default
+      "/sensing/lidar/side_left/hesai_ros_wrapper_node: hesai_temperature": default
+
+      "/sensing/lidar/side_right/hesai_ros_wrapper_node: hesai_status": default
+      "/sensing/lidar/side_right/hesai_ros_wrapper_node: hesai_ptp": default
+      "/sensing/lidar/side_right/hesai_ros_wrapper_node: hesai_temperature": default
+
+      "/sensing/lidar/front_left/hesai_ros_wrapper_node: hesai_status": default
+      "/sensing/lidar/front_left/hesai_ros_wrapper_node: hesai_ptp": default
+      "/sensing/lidar/front_left/hesai_ros_wrapper_node: hesai_temperature": default
+
+      "/sensing/lidar/front_right/hesai_ros_wrapper_node: hesai_status": default
+      "/sensing/lidar/front_right/hesai_ros_wrapper_node: hesai_ptp": default
+      "/sensing/lidar/front_right/hesai_ros_wrapper_node: hesai_temperature": default
+
+      "/sensing/lidar/top/hesai_ros_wrapper_node: hesai_status": default
+      "/sensing/lidar/top/hesai_ros_wrapper_node: hesai_ptp": default
+      "/sensing/lidar/top/hesai_ros_wrapper_node: hesai_temperature": default
+
+      # "/sensing/lidar/rear/hesai_ros_wrapper_node: hesai_status": default,
+      # "/sensing/lidar/rear/hesai_ros_wrapper_node: hesai_ptp": default,
+      # "/sensing/lidar/rear/hesai_ros_wrapper_node: hesai_temperature": default
