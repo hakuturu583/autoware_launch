@@ -1,0 +1,231 @@
+# Copyright 2024 TIER IV, Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+from copy import deepcopy
+import os
+from typing import Any
+from typing import List
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.actions import GroupAction
+from launch.actions import IncludeLaunchDescription
+from launch.actions import OpaqueFunction
+from launch.launch_description_sources import AnyLaunchDescriptionSource
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import EnvironmentVariable
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import PushRosNamespace
+import yaml
+
+
+def join_list_of_arguments(arguments: List[Any]) -> str:
+    """Join a list of arguments into a string, used by Include Launch Description.
+
+    Example:
+        join_list_of_arguments([1,2,3]) -> "[1, 2, 3]"
+    """
+    return f"[{', '.join([str(arg) for arg in arguments])}]"
+
+
+def generate_launch_dictionary():
+    path_dictionary = {
+        "hesai_OT128": AnyLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("aip_common_sensor_launch"),
+                "launch",
+                "hesai_OT128.launch.xml",
+            )
+        ),
+        "hesai_XT32": AnyLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("aip_common_sensor_launch"),
+                "launch",
+                "hesai_XT32.launch.xml",
+            )
+        ),
+        "velodyne_VLS128": AnyLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("aip_common_sensor_launch"),
+                "launch",
+                "velodyne_VLS128.launch.xml",
+            )
+        ),
+        "velodyne_VLP16": AnyLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("aip_common_sensor_launch"),
+                "launch",
+                "velodyne_VLP16.launch.xml",
+            )
+        ),
+        "livox_horizon": AnyLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("aip_common_sensor_launch"),
+                "launch",
+                "livox_horizon.launch.py",
+            )
+        ),
+    }
+    return path_dictionary
+
+
+def erase_rear_lidar_entry_depending_on_vehicle_id(config: dict, vehicle_id: str) -> dict:
+    # Only NO. 8 vehicle does not have a rear lidar, so we erase the rear lidar entry.
+    if vehicle_id != "8":
+        return config
+
+    config["launches"] = [sensor for sensor in config["launches"] if sensor["namespace"] != "rear"]
+    return config
+
+
+def load_sub_launches_from_yaml(context, *args, **kwargs):
+    def load_yaml(yaml_file_path):
+        with open(LaunchConfiguration(yaml_file_path).perform(context), "r") as f:
+            return yaml.safe_load(f)
+
+    config = load_yaml("config_file")
+
+    # Remove the rear lidar entry from the parameter file if the vehicle does not have a rear lidar
+    vehicle_id = LaunchConfiguration("vehicle_id").perform(context)
+    config = erase_rear_lidar_entry_depending_on_vehicle_id(config, vehicle_id)
+
+    path_dictionary = generate_launch_dictionary()
+
+    # Create base parameters which is common for all lidars
+    base_parameters = {}
+    base_parameters["host_ip"] = LaunchConfiguration("host_ip").perform(context)
+    base_parameters["vehicle_mirror_param_file"] = LaunchConfiguration(
+        "vehicle_mirror_param_file"
+    ).perform(context)
+    base_parameters["launch_driver"] = LaunchConfiguration("launch_driver").perform(context)
+    base_parameters["launch_hw_monitor"] = LaunchConfiguration("launch_hw_monitor").perform(context)
+    base_parameters["vehicle_id"] = LaunchConfiguration("vehicle_id").perform(context)
+    base_parameters["pointcloud_container_name"] = LaunchConfiguration(
+        "pointcloud_container_name"
+    ).perform(context)
+    base_parameters["enable_blockage_diag"] = LaunchConfiguration("enable_blockage_diag").perform(
+        context
+    )
+    base_parameters["return_mode"] = LaunchConfiguration("return_mode").perform(context)
+
+    # Set CUDA-related parameters
+    base_parameters["use_shared_container"] = LaunchConfiguration("use_shared_container").perform(
+        context
+    )
+    base_parameters["use_cuda_preprocessor"] = LaunchConfiguration("use_cuda_preprocessor").perform(
+        context
+    )
+
+    # Create launch actions for each lidar
+    sub_launch_actions = []
+    for launch in config["launches"]:
+        launch_parameters = deepcopy(base_parameters)
+        launch_parameters.update(launch["parameters"])  # dict
+        launch_parameter_list_tuple = [(str(k), str(v)) for k, v in launch_parameters.items()]
+        sub_launch_action = GroupAction(
+            [
+                PushRosNamespace(launch["namespace"]),
+                IncludeLaunchDescription(
+                    deepcopy(path_dictionary[launch["sensor_type"]]),
+                    launch_arguments=launch_parameter_list_tuple,
+                ),
+            ]
+        )
+        sub_launch_actions.append(sub_launch_action)
+
+    sub_launch_actions.append(
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(
+                    get_package_share_directory("aip_xx1_gen2_launch"),
+                    "launch",
+                    "pointcloud_preprocessor.launch.py",
+                )
+            ),
+            launch_arguments=[
+                ("base_frame", "base_link"),
+                ("use_multithread", "true"),
+                ("use_intra_process", "true"),
+                ("vehicle_id", LaunchConfiguration("vehicle_id")),
+                ("use_pointcloud_container", LaunchConfiguration("use_pointcloud_container")),
+                ("pointcloud_container_name", LaunchConfiguration("pointcloud_container_name")),
+                # PLEASE NOTE!
+                # We intentionally set `use_cuda_preprocessor` to **FALSE**,
+                # because we do not want to use GPU implementation for pointcloud concatenation.
+                ("use_cuda_preprocessor", "False"),
+            ],
+        )
+    )
+    return [
+        GroupAction([PushRosNamespace("lidar"), *sub_launch_actions]),
+    ]
+
+
+def generate_launch_description():
+    # Define launch arguments
+    launch_arguments = []
+
+    default_config_file_path = os.path.join(
+        get_package_share_directory("aip_xx1_gen2_launch"), "config", "lidar_gen2.yaml"
+    )
+
+    def add_launch_arg(name: str, default_value=None, **kwargs):
+        launch_arguments.append(DeclareLaunchArgument(name, default_value=default_value, **kwargs))
+
+    add_launch_arg(
+        "config_file",
+        default_config_file_path,
+        description="Path to the configuration file",
+    )
+    add_launch_arg("launch_driver", "true")
+    add_launch_arg("launch_hw_monitor", "true", description="launch hardware monitor")
+    add_launch_arg("host_ip", "192.168.1.11")
+    add_launch_arg("use_concat_filter", "true")
+    add_launch_arg(
+        "vehicle_id",
+        default_value=EnvironmentVariable("VEHICLE_ID", default_value="default"),
+    )
+    add_launch_arg("vehicle_mirror_param_file")
+    add_launch_arg("use_pointcloud_container", "false", description="launch pointcloud container")
+    add_launch_arg("pointcloud_container_name", "pointcloud_container")
+    add_launch_arg("enable_blockage_diag", "false")
+    add_launch_arg("return_mode", "Dual")
+
+    # ====================================================================================
+    # PLEASE NOTE!
+
+    # In XX1, only the pointcloud preprocessor uses the CUDA implementation,
+    # while concatenation uses the CPU implementation.
+
+    # Although `use_shared_container` is normally required to be true when `use_cuda_preprocessor` is true,
+    # in this case, we are intentionally setting them to true and false respectively.
+
+    # For <lidar name>.launch.xml, `use_cuda_preprocessor` is passed as this definition in `load_sub_launches_from_yaml()`,
+    # but for the pointcloud_preprocessor.launch.py, it is always passed as **FALSE**.
+
+    # Currently, to perform all pre-processing including concatenation on the GPU,
+    # all nodes must be placed in a single container.
+    # However, this approach lacks fault tolerance, so will not be adopted for a while.
+    add_launch_arg("use_shared_container", "false")
+    add_launch_arg("use_cuda_preprocessor", "true")
+    # ====================================================================================
+
+    # Create launch description with the config_file argument
+    ld = LaunchDescription(launch_arguments)
+    # Add sub-launch files dynamically based on the YAML configuration
+    ld.add_action(OpaqueFunction(function=load_sub_launches_from_yaml))
+
+    return ld

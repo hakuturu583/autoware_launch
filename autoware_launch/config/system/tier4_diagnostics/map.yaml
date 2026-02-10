@@ -24,7 +24,6 @@ units:
     type: and
     list:
       - { type: link, link: /map/001-topic_status/vector_map-error }
-      - { type: link, link: /map/001-topic_status/pointcloud_map-error }
 
   - path: /map/comfortable_stop
     type: and
