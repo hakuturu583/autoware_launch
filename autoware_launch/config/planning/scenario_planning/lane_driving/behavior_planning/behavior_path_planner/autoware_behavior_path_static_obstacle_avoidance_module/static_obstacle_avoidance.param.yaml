@@ -23,9 +23,9 @@
           th_moving_time: 2.0                           # [s]
           longitudinal_margin: 0.0                      # [m]
           lateral_margin:
-            soft_margin: 0.7                            # [m]
+            soft_margin: 0.5                            # [m]
             hard_margin: 0.2                            # [m]
-            hard_margin_for_parked_vehicle: 0.7         # [m]
+            hard_margin_for_parked_vehicle: 0.4         # [m]
           max_expand_ratio: 0.0                         # [-] FOR DEVELOPER
           envelope_buffer_margin: 0.1                   # [m] FOR DEVELOPER
           th_error_eclipse_long_radius: 0.6            # [m]
@@ -34,9 +34,9 @@
           th_moving_time: 2.0
           longitudinal_margin: 0.0
           lateral_margin:
-            soft_margin: 0.7
+            soft_margin: 0.5
             hard_margin: 0.3
-            hard_margin_for_parked_vehicle: 0.7
+            hard_margin_for_parked_vehicle: 0.4
           max_expand_ratio: 0.0
           envelope_buffer_margin: 0.1
           th_error_eclipse_long_radius: 0.6
