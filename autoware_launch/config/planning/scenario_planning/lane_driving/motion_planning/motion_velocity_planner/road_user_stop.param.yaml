@@ -33,12 +33,12 @@
       obstacle_filtering:
         object_type:
           pedestrian: true
-          bicycle: true
+          bicycle: false
           motorcycle: false
           unknown: false
 
         # Trajectory-based filtering
-        trajectory_lateral_margin: 1.0 # lateral margin from ego trajectory to detect objects [m]
+        trajectory_lateral_margin: 0.1 # lateral margin from ego trajectory to detect objects [m]
 
         # Wrong-way detection
         opposing_traffic_detection:
