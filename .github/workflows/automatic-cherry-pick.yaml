@@ -4,8 +4,6 @@ on:
     branches:
       - tier4/main # Branches where the original PRs will be merged
       - beta/v0.51
-      - beta/v0.50
-      - beta/v0.48
     types:
       - opened
       - reopened
@@ -92,8 +90,6 @@ jobs:
         following-branch:
           - tier4/main
           - beta/v0.51
-          - beta/v0.50
-          - beta/v0.48
 
     steps:
       - name: Checkout
