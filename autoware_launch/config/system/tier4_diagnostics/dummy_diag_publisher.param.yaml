@@ -95,5 +95,10 @@
       "process_monitor: Tasks Summary": default
       "voltage_monitor: CMOS Battery Status": default
 
+      ## update_status_checker
+      "autoware_diagnostics_bridge_node_main: main_update_status_checker_ota": default
+      "autoware_diagnostics_bridge_node_main: main_update_status_checker_map": default
+      "autoware_diagnostics_bridge_node_main: main_update_status_checker_ota_unrecoverable": default
+
       ## letterbox_monitor
       "autoware_diagnostics_bridge_node_autoware_ecu: autoware_ecu_autoware_node_alive": default
