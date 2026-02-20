@@ -14,11 +14,9 @@
 
 
 from copy import deepcopy
-import os
 from typing import Any
 from typing import List
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import GroupAction
@@ -28,7 +26,9 @@ from launch.launch_description_sources import AnyLaunchDescriptionSource
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import EnvironmentVariable
 from launch.substitutions import LaunchConfiguration
+from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import PushRosNamespace
+from launch_ros.substitutions import FindPackageShare
 import yaml
 
 
@@ -44,38 +44,48 @@ def join_list_of_arguments(arguments: List[Any]) -> str:
 def generate_launch_dictionary():
     path_dictionary = {
         "hesai_OT128": AnyLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("aip_common_sensor_launch"),
-                "launch",
-                "hesai_OT128.launch.xml",
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("aip_common_sensor_launch"),
+                    "launch",
+                    "hesai_OT128.launch.xml",
+                ]
             )
         ),
         "hesai_XT32": AnyLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("aip_common_sensor_launch"),
-                "launch",
-                "hesai_XT32.launch.xml",
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("aip_common_sensor_launch"),
+                    "launch",
+                    "hesai_XT32.launch.xml",
+                ]
             )
         ),
         "velodyne_VLS128": AnyLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("aip_common_sensor_launch"),
-                "launch",
-                "velodyne_VLS128.launch.xml",
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("aip_common_sensor_launch"),
+                    "launch",
+                    "velodyne_VLS128.launch.xml",
+                ]
             )
         ),
         "velodyne_VLP16": AnyLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("aip_common_sensor_launch"),
-                "launch",
-                "velodyne_VLP16.launch.xml",
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("aip_common_sensor_launch"),
+                    "launch",
+                    "velodyne_VLP16.launch.xml",
+                ]
             )
         ),
         "livox_horizon": AnyLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("aip_common_sensor_launch"),
-                "launch",
-                "livox_horizon.launch.py",
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("aip_common_sensor_launch"),
+                    "launch",
+                    "livox_horizon.launch.py",
+                ]
             )
         ),
     }
@@ -149,10 +159,12 @@ def load_sub_launches_from_yaml(context, *args, **kwargs):
     sub_launch_actions.append(
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                os.path.join(
-                    get_package_share_directory("aip_xx1_gen2_launch"),
-                    "launch",
-                    "pointcloud_preprocessor.launch.py",
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("aip_xx1_gen2_launch"),
+                        "launch",
+                        "pointcloud_preprocessor.launch.py",
+                    ]
                 )
             ),
             launch_arguments=[
@@ -178,16 +190,18 @@ def generate_launch_description():
     # Define launch arguments
     launch_arguments = []
 
-    default_config_file_path = os.path.join(
-        get_package_share_directory("aip_xx1_gen2_launch"), "config", "lidar_gen2.yaml"
-    )
-
     def add_launch_arg(name: str, default_value=None, **kwargs):
         launch_arguments.append(DeclareLaunchArgument(name, default_value=default_value, **kwargs))
 
     add_launch_arg(
         "config_file",
-        default_config_file_path,
+        PathJoinSubstitution(
+            [
+                FindPackageShare("aip_xx1_gen2_launch"),
+                "config",
+                "lidar_gen2.yaml",
+            ]
+        ),
         description="Path to the configuration file",
     )
     add_launch_arg("launch_driver", "true")
