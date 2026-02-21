@@ -6,7 +6,7 @@
   <arg name="vehicle_model" default="sample_vehicle"/>
 
   <arg name="launch_tier4_api" default="true"/>
-  <arg name="rosbridge_enabled" default="true"/>
+  <arg name="rosbridge_enabled" default="false"/>
   <arg name="rosbridge_max_message_size" default="1000000000"/>
 
   <!-- For API EOL information, see https://github.com/tier4/tier4_ad_api_adaptor -->

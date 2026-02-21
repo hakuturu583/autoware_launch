@@ -2,18 +2,18 @@
   ros__parameters:
     fusion_distance: 100.0
     strict_iou_fusion_distance: 100.0
-    strict_iou_match_mode: "iou"
+    strict_iou_match_mode: "iou_x"
     rough_iou_match_mode: "iou_x"
     use_cluster_semantic_type: false
     only_allow_inside_cluster: true
-    roi_scale_factor: 1.1
+    roi_scale_factor: 1.4
     iou_threshold:
       UNKNOWN : 0.1
-      CAR : 0.65
-      TRUCK : 0.65
-      BUS : 0.65
-      TRAILER : 0.65
-      MOTORCYCLE : 0.65
-      BICYCLE : 0.65
-      PEDESTRIAN : 0.65
+      CAR : 0.5
+      TRUCK : 0.5
+      BUS : 0.5
+      TRAILER : 0.5
+      MOTORCYCLE : 0.5
+      BICYCLE : 0.5
+      PEDESTRIAN : 0.5
     remove_unknown: false
