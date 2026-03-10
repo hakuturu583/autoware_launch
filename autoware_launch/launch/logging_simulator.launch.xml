@@ -8,8 +8,8 @@
   <arg name="data_path" default="$(env HOME)/autoware_data" description="packages data and artifacts directory path"/>
 
   <!-- launch module preset -->
-  <arg name="planning_module_preset" default="default" description="planning module preset"/>
-  <arg name="control_module_preset" default="default" description="control module preset"/>
+  <arg name="planning_module_preset" default="xx1" description="planning module preset"/>
+  <arg name="control_module_preset" default="xx1" description="control module preset"/>
 
   <!-- Optional parameters -->
   <!-- Modules to be launched -->
@@ -34,12 +34,28 @@
   <!-- Tools -->
   <arg name="rviz" default="true" description="launch rviz"/>
   <!-- V2X-->
-  <arg name="launch_v2x" default="true" description="launch v2x modules"/>
+  <arg name="launch_v2x" default="false" description="launch v2x modules"/>
   <arg name="v2x_location" default="invalid_location" description="location for v2x (e.g. komatsu, shiojiri)"/>
   <!-- Scenario simulation -->
   <arg name="scenario_simulation" default="false" description="use scenario simulation"/>
+  <!-- Planning -->
+  <arg name="use_experimental_lane_change_function" default="false"/>
+  <arg name="use_external_lane_change" default="true"/>
+  <!-- Others -->
+  <arg name="use_foa" default="false"/>
 
   <group scoped="false">
+    <let
+      name="diagnostic_graph_aggregator_graph_path"
+      value="$(find-pkg-share autoware_launch)/config/system/tier4_diagnostics/autoware-main_gen2.yaml"
+      if="$(eval &quot;'aip_xx1_gen2' == '$(var sensor_model)'&quot;)"
+    />
+    <let
+      name="diagnostic_graph_aggregator_graph_path"
+      value="$(find-pkg-share autoware_launch)/config/system/tier4_diagnostics/autoware-main.yaml"
+      unless="$(eval &quot;'aip_xx1_gen2' == '$(var sensor_model)'&quot;)"
+    />
+
     <include file="$(find-pkg-share autoware_launch)/launch/autoware.launch.xml">
       <!-- Common -->
       <arg name="map_path" value="$(var map_path)"/>
@@ -76,6 +92,11 @@
       <!-- V2X -->
       <arg name="launch_v2x" value="$(var launch_v2x)"/>
       <arg name="v2x_location" value="$(var v2x_location)"/>
+      <!-- Planning -->
+      <arg name="use_experimental_lane_change_function" value="$(var use_experimental_lane_change_function)"/>
+      <arg name="use_external_lane_change" value="$(var use_external_lane_change)"/>
+      <!-- Others -->
+      <arg name="use_foa" value="$(var use_foa)"/>
     </include>
   </group>
 </launch>
