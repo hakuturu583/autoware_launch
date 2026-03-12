@@ -47,8 +47,8 @@ units:
   # letterbox_monitor individual
   - path: /foolproof/main/autoware_node_alive
     type: diag
-    node: autoware_diagnostics_bridge_node_autoware_ecu
-    name: autoware_ecu_autoware_node_alive
+    node: autoware_diagnostics_bridge_node_main
+    name: main_autoware_node_alive
     timeout: 3.0
 
   # - path: /foolproof/perception1/recognition_node_alive
