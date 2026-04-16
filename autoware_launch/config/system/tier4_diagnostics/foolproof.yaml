@@ -68,18 +68,15 @@ units:
     node: autoware_diagnostics_bridge_node_main
     name: main_update_status_checker_ota
     timeout: 3.0
-    latch: 0.0
 
   - path: /foolproof/main/update_status_map
     type: diag
     node: autoware_diagnostics_bridge_node_main
     name: main_update_status_checker_map
     timeout: 3.0
-    latch: 0.0
 
   - path: /foolproof/main/update_status_unrecoverable
     type: diag
     node: autoware_diagnostics_bridge_node_main
     name: main_update_status_checker_ota_unrecoverable
     timeout: 3.0
-    latch: 0.0
