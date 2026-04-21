@@ -52,11 +52,11 @@
         bicycle:
           pedestrian_and_bicycle_tracker: 2.50
         pedestrian:
-          pedestrian_and_bicycle_tracker: 2.00
+          pedestrian_and_bicycle_tracker: 2.50
 
       min_area:
         unknown:
-          polygon_tracker: 0.0
+          polygon_tracker: 0.001
           multi_vehicle_tracker: 3.6
           pedestrian_and_bicycle_tracker: 0.001
         car:

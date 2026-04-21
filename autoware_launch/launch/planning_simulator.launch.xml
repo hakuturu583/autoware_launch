@@ -7,8 +7,9 @@
   <arg name="data_path" default="$(env HOME)/autoware_data" description="packages data and artifacts directory path"/>
 
   <!-- launch module preset -->
-  <arg name="planning_module_preset" default="default" description="planning module preset"/>
-  <arg name="control_module_preset" default="default" description="control module preset"/>
+  <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / rule_based"/>
+  <arg name="planning_module_preset" default="xx1" description="planning module preset"/>
+  <arg name="control_module_preset" default="xx1" description="control module preset"/>
 
   <!-- Optional parameters -->
   <!-- Map -->
@@ -38,10 +39,17 @@
   <let name="rviz_respawn" value="false" if="$(var scenario_simulation)"/>
   <let name="rviz_respawn" value="true" unless="$(var scenario_simulation)"/>
   <!-- V2X-->
-  <arg name="launch_v2x" default="true" description="launch v2x modules"/>
+  <arg name="launch_v2x" default="false" description="launch v2x modules"/>
   <arg name="v2x_location" default="invalid_location" description="location for v2x (e.g. komatsu, shiojiri)"/>
   <!-- Vcu emulation -->
   <arg name="vehicle_simulation" default="true" description="use vehicle simulation"/>
+  <!-- Planning -->
+  <arg name="use_experimental_lane_change_function" default="true"/>
+  <!-- Others -->
+  <arg name="use_foa" default="$(var scenario_simulation)"/>
+
+  <let name="rviz_respawn" value="false" if="$(var scenario_simulation)"/>
+  <let name="rviz_respawn" value="true" unless="$(var scenario_simulation)"/>
   <!-- Auto mode setting-->
   <arg name="enable_all_modules_auto_mode" default="$(var scenario_simulation)" description="enable all module's auto mode"/>
   <!-- Simulated time -->
@@ -65,6 +73,7 @@
       <arg name="sensor_model" value="$(var sensor_model)"/>
       <arg name="data_path" value="$(var data_path)"/>
       <!-- launch module preset -->
+      <arg name="planning_setting" value="$(var planning_setting)"/>
       <arg name="planning_module_preset" value="$(var planning_module_preset)"/>
       <arg name="control_module_preset" value="$(var control_module_preset)"/>
       <!-- Modules to be launched -->
@@ -83,6 +92,10 @@
       <!-- Tools -->
       <arg name="rviz" value="$(var rviz)"/>
       <arg name="rviz_config" value="$(var rviz_config)"/>
+      <!-- Planning -->
+      <arg name="use_experimental_lane_change_function" value="$(var use_experimental_lane_change_function)"/>
+      <!-- Others -->
+      <arg name="use_foa" value="$(var use_foa)"/>
       <arg name="rviz_respawn" value="$(var rviz_respawn)"/>
       <!-- V2X -->
       <arg name="launch_v2x" value="$(var launch_v2x)"/>
