@@ -20,7 +20,7 @@
     emergency_state_traj_rot_dev: 0.7854
 
     # drive state
-    kp: 0.4
+    kp: 0.7
     ki: 0.0
     kd: 0.0
     max_out: 1.0
