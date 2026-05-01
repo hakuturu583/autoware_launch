@@ -1,0 +1,256 @@
+name: Check upstream for cherry-pick
+
+on:
+  schedule:
+    - cron: 0 * * * * # Every hour at :00 minutes UTC
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+env:
+  UPSTREAM_OWNER: autowarefoundation
+  UPSTREAM_REPO: autoware_launch
+  UPSTREAM_BRANCH: main
+  TARGET_BRANCH: tier4/main
+  ISSUE_LABEL: cherry-pick needed
+  PR_LABEL: cherry-pick from awf
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate token
+        id: generate-token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Create required labels if they don't exist
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
+          script: |
+            const labels = [
+              {
+                name: '${{ env.ISSUE_LABEL }}',
+                color: 'FBD000',
+                description: 'Issue for cherry-picking commits from upstream Autoware Foundation'
+              },
+              {
+                name: '${{ env.PR_LABEL }}',
+                color: 'FFA500',
+                description: 'PR generated to cherry-pick from upstream Autoware Foundation'
+              }
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name
+                });
+                console.log(`Label ${label.name} already exists`);
+              } catch (error) {
+                if (error.status === 404) {
+                  console.log(`Label ${label.name} does not exist. Creating it...`);
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: label.name,
+                    color: label.color,
+                    description: label.description
+                  });
+                  console.log(`Label ${label.name} created successfully`);
+                } else {
+                  throw error;
+                }
+              }
+            }
+
+      - name: Fetch upstream PRs and create issues
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
+          script: |
+            const upstreamOwner = '${{ env.UPSTREAM_OWNER }}';
+            const upstreamRepo = '${{ env.UPSTREAM_REPO }}';
+            const upstreamBranch = '${{ env.UPSTREAM_BRANCH }}';
+            const targetBranch = '${{ env.TARGET_BRANCH }}';
+            const now = new Date();
+            const cutoffTime = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000));
+            const cutoffDate = cutoffTime.toISOString().split('T')[0];
+            const issueLabel = '${{ env.ISSUE_LABEL }}';
+            const prLabel = '${{ env.PR_LABEL }}';
+            const downstreamOwner = context.repo.owner;
+            const downstreamRepo = context.repo.repo;
+            const upstreamRef = `${upstreamOwner}/${upstreamRepo}`;
+
+            console.log(`Fetching merged PRs from ${upstreamRef} with query merged:>=${cutoffDate} and base:${upstreamBranch}`);
+
+            // Fetch merged PRs from upstream using GitHub search query
+            const upstreamPRs = [];
+            let page = 1;
+            const perPage = 100;
+            const query = `repo:${upstreamRef} is:pr is:merged base:${upstreamBranch} merged:>=${cutoffDate}`;
+
+            try {
+              while (true) {
+                const response = await github.rest.search.issuesAndPullRequests({
+                  q: query,
+                  per_page: perPage,
+                  page: page
+                });
+
+                if (response.data.items.length === 0) break;
+
+                for (const prItem of response.data.items) {
+                  const prDetail = await github.rest.pulls.get({
+                    owner: upstreamOwner,
+                    repo: upstreamRepo,
+                    pull_number: prItem.number
+                  });
+
+                  const mergedDate = new Date(prDetail.data.merged_at);
+                  upstreamPRs.push({
+                    number: prDetail.data.number,
+                    title: prDetail.data.title,
+                    htmlUrl: prDetail.data.html_url,
+                    mergedAt: mergedDate,
+                    user: prDetail.data.user.login
+                  });
+                }
+
+                if (response.data.items.length < perPage) break;
+                page++;
+              }
+
+              console.log(`Found ${upstreamPRs.length} upstream PRs merged since ${cutoffDate}`);
+            } catch (error) {
+              console.error('Error fetching upstream PRs:', error);
+              throw error;
+            }
+
+            if (upstreamPRs.length === 0) {
+              console.log('No new upstream PRs found');
+              return;
+            }
+
+            // Fetch all downstream issues with the label to check for existing duplicates
+            const existingIssues = [];
+            let issuePage = 1;
+
+            try {
+              while (true) {
+                const response = await github.rest.issues.listForRepo({
+                  owner: downstreamOwner,
+                  repo: downstreamRepo,
+                  labels: issueLabel,
+                  state: 'all',
+                  per_page: 100,
+                  page: issuePage
+                });
+
+                if (response.data.length === 0) break;
+
+                for (const issue of response.data) {
+                  // Extract PR number from issue title: "Cherry-pick: [autowarefoundation/autoware_launch#123]: ..."
+                  const match = issue.title.match(/Cherry-pick: \[([^\]]+)#(\d+)\]:/);
+                  if (match) {
+                    existingIssues.push({
+                      prNumber: parseInt(match[2]),
+                      issueNumber: issue.number,
+                      title: issue.title
+                    });
+                  }
+                }
+
+                if (response.data.length < 100) break;
+                issuePage++;
+              }
+
+              console.log(`Found ${existingIssues.length} existing downstream issues with label ${issueLabel}`);
+            } catch (error) {
+              console.error('Error fetching existing issues:', error);
+              throw error;
+            }
+
+            // Create a set of PR numbers that already have issues
+            const processedPRNumbers = new Set(existingIssues.map(issue => issue.prNumber));
+
+            // Process each new PR
+            for (const pr of upstreamPRs) {
+              if (processedPRNumbers.has(pr.number)) {
+                console.log(`PR #${pr.number} already has an issue, skipping`);
+                continue;
+              }
+
+              console.log(`Processing PR #${pr.number}: ${pr.title}`);
+
+              // Build issue body
+              const truncatedPRTitle = pr.title.length > 192 ? `${pr.title.slice(0, 192)}...` : pr.title;
+              const issueTitle = `Cherry-pick: [${upstreamRef}#${pr.number}]: ${truncatedPRTitle}`;
+              let issueBody = `## Upstream PR\n\n`;
+              issueBody += `- **PR**: [${upstreamRef}#${pr.number}](${pr.htmlUrl})\n`;
+              issueBody += `- **Title**: ${pr.title}\n`;
+              issueBody += `- **Author**: ${pr.user}\n`;
+              issueBody += `- **Merged at**: ${pr.mergedAt.toUTCString()}\n`;
+              issueBody += `- **Downstream target branch**: \`${targetBranch}\`\n`;
+
+              issueBody += `\n## Context for AI Cherry-Pick\n\n`;
+              issueBody += `Please create a cherry-pick PR into \`${targetBranch}\` following this strategy:\n`;
+              issueBody += `1. Try a naive cherry-pick of commits from ${upstreamRef}#${pr.number} first.\n`;
+              issueBody += `2. If naive cherry-pick succeeds, directly create the PR.\n`;
+              issueBody += `3. If conflicts occur, apply the minimum necessary changes so the resulting diff best reflects the original upstream PR intent (refer to ${upstreamRef}#${pr.number}).\n`;
+              issueBody += `4. Set PR label: \`${prLabel}\`.\n`;
+              issueBody += `5. Keep downstream-specific behavior unless it conflicts with upstream intent.\n`;
+
+              issueBody += `\n## PR Body Requirements\n\n`;
+              issueBody += `The cherry-pick PR body must include:\n`;
+              issueBody += `- Whether there was a conflict: \`conflict: yes/no\`\n`;
+              issueBody += `- Summary of upstream changes\n`;
+              issueBody += `- What conflicts happened and how they were resolved (if any)\n`;
+              issueBody += `- Link to the original upstream PR\n`;
+              issueBody += `- Reference: ${upstreamRef}#${pr.number}\n`;
+
+              issueBody += `\n## PR Body Template\n\n`;
+              issueBody += '```markdown\n';
+              issueBody += '## Summary\n';
+              issueBody += '- Cherry-picked from: ' + upstreamRef + '#' + pr.number + '\n';
+              issueBody += '- Upstream PR: ' + pr.htmlUrl + '\n';
+              issueBody += '- Target branch: ' + targetBranch + '\n';
+              issueBody += '\n';
+              issueBody += '## Conflict\n';
+              issueBody += '- conflict: yes/no\n';
+              issueBody += '\n';
+              issueBody += '## Conflict Resolution Details\n';
+              issueBody += '- (Describe each conflict and exact resolution. If none, write "No conflicts".)\n';
+              issueBody += '\n';
+              issueBody += '## Notes\n';
+              issueBody += '- (Any downstream-specific adjustments, if made.)\n';
+              issueBody += '\n';
+              issueBody += '## Labels\n';
+              issueBody += '- ' + prLabel + '\n';
+              issueBody += '```\n';
+
+              // Create the issue
+              try {
+                const issueResponse = await github.rest.issues.create({
+                  owner: downstreamOwner,
+                  repo: downstreamRepo,
+                  title: issueTitle,
+                  body: issueBody,
+                  labels: [issueLabel]
+                });
+
+                console.log(`Created issue #${issueResponse.data.number} for upstream PR ${upstreamRef}#${pr.number}`);
+              } catch (error) {
+                console.error(`Error creating issue for upstream PR #${pr.number}:`, error.message);
+                throw error;
+              }
+            }
+
+            console.log('Completed checking upstream for cherry-pick candidates');
