@@ -79,8 +79,8 @@
           longitudinal_margin: 1.0
           lateral_margin:
             soft_margin: 0.5
-            hard_margin: 0.5
-            hard_margin_for_parked_vehicle: 0.4
+            hard_margin: 0.3
+            hard_margin_for_parked_vehicle: 0.3
           max_expand_ratio: 0.0
           envelope_buffer_margin: 0.5
           th_error_eclipse_long_radius: 0.6
@@ -100,9 +100,9 @@
           th_moving_time: 1.0
           longitudinal_margin: 1.0
           lateral_margin:
-            soft_margin: 0.7
-            hard_margin: 0.5
-            hard_margin_for_parked_vehicle: 0.5
+            soft_margin: 0.5
+            hard_margin: 0.3
+            hard_margin_for_parked_vehicle: 0.3
           max_expand_ratio: 0.0
           envelope_buffer_margin: 0.5
           th_error_eclipse_long_radius: 0.6
@@ -158,7 +158,7 @@
             th_moving_distance: 1.0                     # [m]
           ignore_area:
             traffic_light:
-              front_distance: 20.0                      # [m]
+              front_distance: 25.0                      # [m]
             crosswalk:
               front_distance: 20.0                      # [m]
               behind_distance: 0.0                      # [m]
