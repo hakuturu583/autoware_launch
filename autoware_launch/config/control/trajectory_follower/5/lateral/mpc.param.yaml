@@ -18,7 +18,7 @@
     qp_solver_type: "osqp"                       # optimization solver option (unconstraint_fast or osqp)
     mpc_prediction_horizon: 30                   # prediction horizon step
     mpc_prediction_dt: 0.1                       # prediction horizon period [s]
-    mpc_weight_lat_error: 0.3                    # lateral error weight in matrix Q
+    mpc_weight_lat_error: 1.5                    # lateral error weight in matrix Q
     mpc_weight_heading_error: 0.4                # heading error weight in matrix Q
     mpc_weight_heading_error_squared_vel: 0.03   # heading error * velocity weight in matrix Q
     mpc_weight_steering_input: 1.0               # steering error weight in matrix R
@@ -66,7 +66,7 @@
 
     # steer offset
     steering_offset:
-      enable_auto_steering_offset_removal: true
+      enable_auto_steering_offset_removal: false
       steer_offset_filter_cutoff_hz: 0.3 # cutoff frequency of lowpass filter for steering offset [Hz]
       max_update_th: 0.01 # maximum change in steering offset [rad]
 
