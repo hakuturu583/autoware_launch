@@ -10,12 +10,13 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  UPSTREAM_OWNER: autowarefoundation
-  UPSTREAM_REPO: autoware_launch
-  UPSTREAM_BRANCH: main
+  UPSTREAM_OWNER: tier4
+  UPSTREAM_REPO: autoware_launch.x2
+  UPSTREAM_BRANCH: tier4/main
+  UPSTREAM_PR_LABEL: xx1 tier4/main
   TARGET_BRANCH: tier4/main
   ISSUE_LABEL: cherry-pick needed
-  PR_LABEL: cherry-pick from awf
+  PR_LABEL: cherry-pick from x2
 
 jobs:
   check-upstream:
@@ -37,12 +38,12 @@ jobs:
               {
                 name: '${{ env.ISSUE_LABEL }}',
                 color: 'FBD000',
-                description: 'Issue for cherry-picking commits from upstream Autoware Foundation'
+                description: 'Issue for cherry-picking commits from autoware_launch.x2'
               },
               {
                 name: '${{ env.PR_LABEL }}',
                 color: 'FFA500',
-                description: 'PR generated to cherry-pick from upstream Autoware Foundation'
+                description: 'PR generated to cherry-pick from autoware_launch.x2'
               }
             ];
 
@@ -79,9 +80,10 @@ jobs:
             const upstreamOwner = '${{ env.UPSTREAM_OWNER }}';
             const upstreamRepo = '${{ env.UPSTREAM_REPO }}';
             const upstreamBranch = '${{ env.UPSTREAM_BRANCH }}';
+            const upstreamPRLabel = '${{ env.UPSTREAM_PR_LABEL }}';
             const targetBranch = '${{ env.TARGET_BRANCH }}';
             const now = new Date();
-            const cutoffTime = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000));
+            const cutoffTime = new Date(now.getTime() - (14 * 24 * 60 * 60 * 1000));
             const cutoffDate = cutoffTime.toISOString().split('T')[0];
             const issueLabel = '${{ env.ISSUE_LABEL }}';
             const prLabel = '${{ env.PR_LABEL }}';
@@ -89,13 +91,13 @@ jobs:
             const downstreamRepo = context.repo.repo;
             const upstreamRef = `${upstreamOwner}/${upstreamRepo}`;
 
-            console.log(`Fetching merged PRs from ${upstreamRef} with query merged:>=${cutoffDate} and base:${upstreamBranch}`);
+            console.log(`Fetching merged PRs from ${upstreamRef} with query merged:>=${cutoffDate}, base:${upstreamBranch}, and label:"${upstreamPRLabel}"`);
 
             // Fetch merged PRs from upstream using GitHub search query
             const upstreamPRs = [];
             let page = 1;
             const perPage = 100;
-            const query = `repo:${upstreamRef} is:pr is:merged base:${upstreamBranch} merged:>=${cutoffDate}`;
+            const query = `repo:${upstreamRef} is:pr is:merged base:${upstreamBranch} label:"${upstreamPRLabel}" merged:>=${cutoffDate}`;
 
             try {
               while (true) {
@@ -157,10 +159,11 @@ jobs:
                 if (response.data.length === 0) break;
 
                 for (const issue of response.data) {
-                  // Extract PR number from issue title: "Cherry-pick: [autowarefoundation/autoware_launch#123]: ..."
+                  // Extract PR number from issue title: "Cherry-pick: [tier4/autoware_launch.x2#123]: ..."
                   const match = issue.title.match(/Cherry-pick: \[([^\]]+)#(\d+)\]:/);
                   if (match) {
                     existingIssues.push({
+                      upstreamRef: match[1],
                       prNumber: parseInt(match[2]),
                       issueNumber: issue.number,
                       title: issue.title
@@ -179,11 +182,11 @@ jobs:
             }
 
             // Create a set of PR numbers that already have issues
-            const processedPRNumbers = new Set(existingIssues.map(issue => issue.prNumber));
+            const processedPRs = new Set(existingIssues.map(issue => `${issue.upstreamRef}#${issue.prNumber}`));
 
             // Process each new PR
             for (const pr of upstreamPRs) {
-              if (processedPRNumbers.has(pr.number)) {
+              if (processedPRs.has(`${upstreamRef}#${pr.number}`)) {
                 console.log(`PR #${pr.number} already has an issue, skipping`);
                 continue;
               }
