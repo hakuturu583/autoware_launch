@@ -12,6 +12,20 @@
   <arg name="planning_module_preset" default="default" description="planning module preset"/>
   <arg name="control_module_preset" default="default" description="control module preset"/>
 
+  <!-- CARLA map name (separate from Autoware map_path) -->
+  <arg name="carla_map" default="" description="CARLA map name (e.g. odaibatest). If empty, derived from map_path basename."/>
+
+  <!-- SplatSim integration (forwarded to autoware_carla_interface) -->
+  <arg name="render_with_splatsim" default="false" description="Enable splatsim rendering via Docker + gRPC"/>
+  <arg name="splatsim_tileset_path" default="" description="Host path to tileset.json"/>
+  <arg name="splatsim_image" default="splatsim:latest" description="Docker image for splatsim"/>
+  <arg name="splatsim_grpc_port" default="50051"/>
+  <arg name="splatsim_use_sh" default="true"/>
+  <arg name="splatsim_frame_rate" default="20.0"/>
+  <arg name="splatsim_device" default="cuda:0"/>
+  <arg name="splatsim_restart_container" default="false"/>
+  <arg name="splatsim_compress_format" default="jpeg"/>
+
   <!-- Optional parameters -->
   <!-- Modules to be launched -->
   <arg name="vehicle" default="true" description="launch vehicle"/>
@@ -40,8 +54,24 @@
   <arg name="rviz_config_name" default="autoware.rviz" description="rviz config name"/>
   <arg name="rviz_config" default="$(find-pkg-share autoware_launch)/rviz/$(var rviz_config_name)" description="rviz config path"/>
   <group scoped="false" if="$(eval '\'$(var simulator_type)\' == \'carla\'')">
-    <include file="$(find-pkg-share autoware_carla_interface)/autoware_carla_interface.launch.xml"/>
+    <include file="$(find-pkg-share autoware_carla_interface)/autoware_carla_interface.launch.xml">
+      <arg name="map_path" value="$(var map_path)"/>
+      <arg name="carla_map" value="$(var carla_map)"/>
+      <arg name="vehicle_model" value="$(var vehicle_model)"/>
+      <arg name="use_sim_time" value="$(var use_sim_time)"/>
+      <arg name="render_with_splatsim" value="$(var render_with_splatsim)"/>
+      <arg name="splatsim_tileset_path" value="$(var splatsim_tileset_path)"/>
+      <arg name="splatsim_image" value="$(var splatsim_image)"/>
+      <arg name="splatsim_grpc_port" value="$(var splatsim_grpc_port)"/>
+      <arg name="splatsim_use_sh" value="$(var splatsim_use_sh)"/>
+      <arg name="splatsim_frame_rate" value="$(var splatsim_frame_rate)"/>
+      <arg name="splatsim_device" value="$(var splatsim_device)"/>
+      <arg name="splatsim_restart_container" value="$(var splatsim_restart_container)"/>
+      <arg name="splatsim_compress_format" value="$(var splatsim_compress_format)"/>
+    </include>
   </group>
+
+  <let name="diag_graph_config" value="$(eval &quot;'splatsim' if '$(var render_with_splatsim)' == 'true' else '$(var simulator_type)'&quot;)"/>
 
   <group scoped="false">
     <include file="$(find-pkg-share autoware_launch)/launch/autoware.launch.xml">
@@ -71,7 +101,7 @@
       <!-- System -->
       <arg name="launch_system_monitor" value="$(var launch_system_monitor)"/>
       <arg name="launch_dummy_diag_publisher" value="$(var launch_dummy_diag_publisher)"/>
-      <arg name="diagnostic_graph_aggregator_graph_path" value="$(find-pkg-share autoware_launch)/config/system/diagnostics/autoware-$(var simulator_type).yaml"/>
+      <arg name="diagnostic_graph_aggregator_graph_path" value="$(find-pkg-share autoware_launch)/config/system/diagnostics/autoware-$(var diag_graph_config).yaml"/>
       <!-- Sensing -->
       <arg name="launch_sensing_driver" value="$(var launch_sensing_driver)"/>
       <!-- Perception-->
