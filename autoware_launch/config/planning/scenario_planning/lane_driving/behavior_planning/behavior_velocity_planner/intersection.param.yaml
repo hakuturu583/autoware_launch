@@ -98,7 +98,7 @@
         denoise_kernel: 1.0
         attention_lane_crop_curvature_threshold: 0.25
         attention_lane_curvature_calculation_ds: 0.6
-        peeking_offset: -0.5
+        peeking_offset: -0.3
         occlusion_required_clearance_distance: 55.0
         possible_object_bbox: [1.9, 2.5]
         ignore_parked_vehicle_speed_threshold: 0.8333
