@@ -1,12 +1,12 @@
 # SplatSim Diagnostic Configuration
 # Minimal diagnostic graph for splatsim rendering mode.
-# No sensing/localization/perception/hardware diagnostics since those modules
-# are bypassed in splatsim mode.
+# No sensing/localization/perception diagnostics since those modules
+# are bypassed in splatsim mode. Map/planning checks are relaxed
+# because pointcloud_map rate check and routing state are not
+# available without full sensing/localization stack.
 
 files:
   - { path: $(dirname)/control.yaml }
-  - { path: $(dirname)/map.yaml }
-  - { path: $(dirname)/planning.yaml }
   - { path: $(dirname)/system.yaml }
   - { path: $(dirname)/vehicle.yaml }
 
@@ -23,26 +23,20 @@ units:
   - path: /autoware/modes/autonomous
     type: and
     list:
-      - { type: link, link: /control/autonomous_available }
-      - { type: link, link: /map/autonomous_available }
-      - { type: link, link: /planning/autonomous_available }
-      - { type: link, link: /vehicle/autonomous_available }
+      - { type: link, link: /autoware/control }
+      - { type: link, link: /autoware/vehicle }
 
   - path: /autoware/modes/pull_over
     type: and
     list:
-      - { type: link, link: /control/pull_over_available }
-      - { type: link, link: /map/pull_over_available }
-      - { type: link, link: /planning/pull_over_available }
-      - { type: link, link: /vehicle/pull_over_available }
+      - { type: link, link: /autoware/control }
+      - { type: link, link: /autoware/vehicle }
 
   - path: /autoware/modes/comfortable_stop
     type: and
     list:
-      - { type: link, link: /control/comfortable_stop_available }
-      - { type: link, link: /map/comfortable_stop_available }
-      - { type: link, link: /planning/comfortable_stop_available }
-      - { type: link, link: /vehicle/comfortable_stop_available }
+      - { type: link, link: /autoware/control }
+      - { type: link, link: /autoware/vehicle }
 
   - path: /autoware/modes/emergency_stop
     type: ok
@@ -51,11 +45,6 @@ units:
     type: and
     list:
       - { type: link, link: /autoware/system/service_log_checker }
-
-  - path: /autoware/system/service_log_checker
-    type: diag
-    node: service_log_checker
-    name: response_status
 
   - path: /adapi/mrm_request/delegate
     type: diag
