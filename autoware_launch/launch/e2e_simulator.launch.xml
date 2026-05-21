@@ -26,6 +26,9 @@
   <arg name="splatsim_restart_container" default="false"/>
   <arg name="splatsim_compress_format" default="jpeg"/>
 
+  <!-- CARLA spawn point -->
+  <arg name="spawn_point" default="None" description="Ego vehicle spawn location, e.g. '-4128.5,925.8,56.81,0.0,0.0,24.6'"/>
+
   <!-- Optional parameters -->
   <!-- Modules to be launched -->
   <arg name="vehicle" default="true" description="launch vehicle"/>
@@ -68,6 +71,7 @@
       <arg name="splatsim_device" value="$(var splatsim_device)"/>
       <arg name="splatsim_restart_container" value="$(var splatsim_restart_container)"/>
       <arg name="splatsim_compress_format" value="$(var splatsim_compress_format)"/>
+      <arg name="spawn_point" value="$(var spawn_point)"/>
     </include>
   </group>
 
@@ -91,6 +95,7 @@
       <arg name="launch_perception" value="$(var perception)"/>
       <arg name="launch_planning" value="$(var planning)"/>
       <arg name="launch_control" value="$(var control)"/>
+      <arg name="launch_system" value="$(var system)"/>
       <!-- Global parameters -->
       <arg name="use_sim_time" value="$(var use_sim_time)"/>
       <!-- Vehicle -->
