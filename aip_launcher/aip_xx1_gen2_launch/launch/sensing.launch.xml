@@ -1,4 +1,5 @@
 <launch>
+  <arg name="agnocast_heaphook_path" default="/opt/ros/$(env ROS_DISTRO)/lib/libagnocast_heaphook.so" description="Path to the agnocast heaphook library"/>
   <arg name="launch_driver" default="true" description="do launch driver"/>
   <arg name="vehicle_mirror_param_file" description="path to the file of vehicle mirror position yaml"/>
   <arg name="perception_mode" default="camera_lidar_fusion" description="select perception mode. camera_lidar_fusion, lidar, camera"/>
@@ -13,6 +14,7 @@
     <log message="lidar_config_file: $(var lidar_config_file)"/>
 
     <include file="$(find-pkg-share aip_xx1_gen2_launch)/launch/lidar.launch.py">
+      <arg name="agnocast_heaphook_path" value="$(var agnocast_heaphook_path)"/>
       <arg name="launch_driver" value="$(var launch_driver)"/>
       <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/>
       <arg name="pointcloud_container_name" value="$(var pointcloud_container_name)"/>

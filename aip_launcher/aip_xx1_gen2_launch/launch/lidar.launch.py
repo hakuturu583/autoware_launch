@@ -14,6 +14,7 @@
 
 
 from copy import deepcopy
+import os
 from typing import Any
 from typing import List
 
@@ -138,6 +139,9 @@ def load_sub_launches_from_yaml(context, *args, **kwargs):
     base_parameters["use_cuda_preprocessor"] = LaunchConfiguration("use_cuda_preprocessor").perform(
         context
     )
+    base_parameters["agnocast_heaphook_path"] = LaunchConfiguration(
+        "agnocast_heaphook_path"
+    ).perform(context)
 
     # Create launch actions for each lidar
     sub_launch_actions = []
@@ -235,6 +239,11 @@ def generate_launch_description():
     # However, this approach lacks fault tolerance, so will not be adopted for a while.
     add_launch_arg("use_shared_container", "false")
     add_launch_arg("use_cuda_preprocessor", "true")
+    add_launch_arg(
+        "agnocast_heaphook_path",
+        default_value=f"/opt/ros/{os.environ.get('ROS_DISTRO', 'humble')}/lib/libagnocast_heaphook.so",
+        description="Path to the agnocast heaphook library",
+    )
     # ====================================================================================
 
     # Create launch description with the config_file argument

@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import GroupAction
@@ -41,6 +44,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             "use_multithread": LaunchConfiguration("use_multithread"),
+            "agnocast_heaphook_path": LaunchConfiguration("agnocast_heaphook_path"),
         }.items(),
     )
 
@@ -55,6 +59,10 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            add_launch_arg(
+                "agnocast_heaphook_path",
+                default_value=f"/opt/ros/{os.environ.get('ROS_DISTRO', 'humble')}/lib/libagnocast_heaphook.so",
+            ),
             add_launch_arg("use_multithread", "false"),
             add_launch_arg("container_name", "pointcloud_container"),
             agnocast_env_launch,

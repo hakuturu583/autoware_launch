@@ -68,6 +68,18 @@ def create_parameter_dict(*args):
     return result
 
 
+def make_agnocast_env(context):
+    agnocast_heaphook_path = LaunchConfiguration("agnocast_heaphook_path").perform(context)
+
+    if os.getenv("ENABLE_AGNOCAST") == "1":
+        return {
+            "LD_PRELOAD": f"{agnocast_heaphook_path}:{os.getenv('LD_PRELOAD', '')}",  # noqa: E231
+            "AGNOCAST_MEMPOOL_SIZE": "1073741824",  # 1GB
+        }
+
+    return {}
+
+
 def make_nebula_nodes(context):
     # Model and make
     sensor_model = LaunchConfiguration("sensor_model").perform(context)
@@ -191,6 +203,7 @@ def make_cuda_preprocessor_nodes(context):
                 preprocessor_parameters,
                 distortion_corrector_node_param,
                 ring_outlier_filter_node_param,
+                {"is_agnocast_publish_node": True},
             ],
             remappings=[
                 ("~/input/pointcloud", "pointcloud_raw_ex"),
@@ -304,7 +317,11 @@ def make_preprocessor_nodes(context):
                 ("input", "rectified/pointcloud_ex"),
                 ("output", "pointcloud_before_sync"),
             ],
-            parameters=[ring_outlier_filter_node_param, ring_outlier_output_frame],
+            parameters=[
+                ring_outlier_filter_node_param,
+                ring_outlier_output_frame,
+                {"is_agnocast_publish_node": True},
+            ],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
         )
     )
@@ -342,6 +359,7 @@ def make_blockage_diag_nodes(context):
 
 
 def launch_setup(context, *args, **kwargs):
+    env = make_agnocast_env(context)
     nodes = []
 
     nodes.extend(make_nebula_nodes(context))
@@ -363,6 +381,7 @@ def launch_setup(context, *args, **kwargs):
         composable_node_descriptions=nodes,
         output="both",
         condition=UnlessCondition(LaunchConfiguration("use_shared_container")),
+        additional_env=env,
     )
 
     load_composable_nodes = LoadComposableNodes(
@@ -384,6 +403,11 @@ def generate_launch_description():
         )
 
     add_launch_arg("sensor_model", description="sensor model name")
+    add_launch_arg(
+        "agnocast_heaphook_path",
+        default_value=f"/opt/ros/{os.environ.get('ROS_DISTRO', 'humble')}/lib/libagnocast_heaphook.so",
+        description="Path to the agnocast heaphook library",
+    )
     add_launch_arg(
         "nebula_common_config_file",
         PathJoinSubstitution(
