@@ -56,7 +56,7 @@
   <!-- Others -->
   <arg name="use_foa" default="false"/>
   <arg name="rviz_respawn" default="true"/>
-  <arg name="use_control_command_gate" default="true"/>
+  <arg name="use_control_command_gate" default="false"/>
 
   <!-- external lane change setting -->
   <let
