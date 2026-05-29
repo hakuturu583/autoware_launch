@@ -88,3 +88,4 @@ units:
     type: diag
     node: /adapi/node/mrm_request
     name: delegate
+    timeout: 3.0
