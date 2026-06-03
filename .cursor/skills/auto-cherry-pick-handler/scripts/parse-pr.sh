@@ -51,7 +51,20 @@ if [[ -z $upstream_pr && $body =~ github\.com/([^/]+)/([^/]+)/pull/([0-9]+) ]]; 
     upstream_pr="${BASH_REMATCH[3]}"
 fi
 
-# Title: Cherry-pick: [tier4/autoware_launch.x2#N]: (if used on PRs)
+# Title: feat: foo (backport tier4/autoware_launch.x2#N)
+if [[ -z $upstream_pr && $title =~ \(backport\ ([^#]+)#([0-9]+)\)$ ]]; then
+    upstream_ref="${BASH_REMATCH[1]}"
+    upstream_pr="${BASH_REMATCH[2]}"
+    if [[ $upstream_ref == */* ]]; then
+        upstream_owner="${upstream_ref%%/*}"
+        upstream_repo="${upstream_ref#*/}"
+    else
+        upstream_owner="${UPSTREAM_OWNER}"
+        upstream_repo="${UPSTREAM_REPO}"
+    fi
+fi
+
+# Title (legacy): Cherry-pick: [tier4/autoware_launch.x2#N]:
 if [[ -z $upstream_pr && $title =~ \[([^#]+)#([0-9]+)\] ]]; then
     upstream_ref="${BASH_REMATCH[1]}"
     upstream_pr="${BASH_REMATCH[2]}"
