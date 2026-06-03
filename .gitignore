@@ -16,3 +16,7 @@ log/
 
 #prettier
 node_modules/
+
+# auto-cherry-pick-handler skill runtime
+.cursor/skills/auto-cherry-pick-handler/.cache/
+.cursor/skills/auto-cherry-pick-handler/worktrees/
