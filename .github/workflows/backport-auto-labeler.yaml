@@ -1,0 +1,148 @@
+name: Backport Auto-labeler
+on:
+  pull_request:
+    branches:
+      - tier4/main
+      - beta/**
+    types:
+      - opened
+      - reopened
+
+jobs:
+  compute-config:
+    runs-on: ubuntu-22.04
+    outputs:
+      known_branch: ${{ steps.parse-release-info.outputs.known_branch }}
+      labels: ${{ steps.parse-release-info.outputs.labels }}
+    steps:
+      - name: Generate token
+        id: generate-token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Install python dependencies
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install python3-pip
+          pip3 install pyyaml
+
+      - name: Fetch .release_info.yaml from metarepository
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          CURRENT_REPO="${{ github.repository }}"
+          METAREPO="${CURRENT_REPO/autoware_launch/pilot-auto}"
+          gh api "repos/${METAREPO}/contents/.release_info.yaml" \
+            --header "Accept: application/vnd.github.raw+json" \
+            > .release_info.yaml
+
+      - name: Parse .release_info.yaml
+        id: parse-release-info
+        env:
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          python3 - <<'EOF'
+          import yaml, json, os
+
+          with open('.release_info.yaml') as f:
+            info = yaml.safe_load(f)
+
+          base_branch = os.environ['BASE_BRANCH']
+          pr_title = os.environ['PR_TITLE']
+          is_backport = '(backport ' in pr_title
+
+          known_branches = ['tier4/main']
+          siblings_map = {}
+          top_siblings = info.get('siblings', {})
+          if top_siblings:
+            # 'tier4/main' branch is hardcoded (pilot-auto repository uses main, autoware_launch uses tier4/main.)
+            siblings_map['tier4/main'] = [f"{product} tier4/main" for product in top_siblings]
+          for release in info.get('releases', []):
+            if release.get('inactive', False):
+              continue
+            branch_name = f"beta/{release['version']}"
+            known_branches.append(branch_name)
+            siblings = release.get('siblings', {})
+            if siblings:
+              siblings_map[branch_name] = [f"{product} {branch}" for product, branch in siblings.items()]
+
+          if base_branch not in known_branches:
+            known_branch = 'false'
+            labels = []
+          else:
+            known_branch = 'true'
+            labels = []
+            if not is_backport:
+              labels = [f"backport {b}" for b in known_branches if b != base_branch]
+            labels += siblings_map.get(base_branch, [])
+
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+            f.write(f"known_branch={known_branch}\n")
+            f.write(f"labels={json.dumps(labels)}\n")
+          EOF
+
+  auto-labeler:
+    runs-on: ubuntu-latest
+    name: Auto-labeler
+    needs: [compute-config]
+    if: needs.compute-config.outputs.known_branch == 'true'
+    steps:
+      - name: Generate token
+        id: generate-token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Create and add labels
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
+          script: |
+            const labelsToAdd = ${{ needs.compute-config.outputs.labels }};
+
+            for (const labelName of labelsToAdd) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: labelName
+                });
+                console.log(`Label '${labelName}' already exists`);
+              } catch (error) {
+                if (error.status === 404) {
+                  try {
+                    await github.rest.issues.createLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      name: labelName,
+                      color: '0E8A16',
+                    });
+                    console.log(`Label '${labelName}' created`);
+                  } catch (createError) {
+                    if (createError.status === 422) {
+                      console.log(`Label '${labelName}' was created concurrently; continuing`);
+                    } else {
+                      throw createError;
+                    }
+                  }
+                } else {
+                  throw error;
+                }
+              }
+            }
+
+            console.log('Waiting for 10 seconds...');
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            console.log('Wait completed');
+
+            await github.rest.issues.addLabels({
+              issue_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: labelsToAdd
+            });
+            console.log(`Labels added to PR: ${labelsToAdd.join(', ')}`);
