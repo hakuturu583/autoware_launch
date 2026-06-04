@@ -1,6 +1,21 @@
+# This file is managed by sync-params workflow.
+# Keys marked with '{OVERRIDE}' or '# {OVERRIDE: reason}' are persisted as variant overrides.
+# 'reason' can be any single-line text without braces.
+# To keep local changes, annotate fields with '# {OVERRIDE}' or '# {OVERRIDE: reason}'.
+#
+# Source: https://github.com/autowarefoundation/autoware_core/blob/33a6c91ef1a9523e5aff206e7bffa374c9949a99/map/autoware_map_loader/config/lanelet2_map_loader.param.yaml
+
 /**:
   ros__parameters:
     allow_unsupported_version: true             # flag to load unsupported format_version anyway. If true, just prints warning.
     center_line_resolution: 5.0                 # [m]
     use_waypoints: true                         # "centerline" in the Lanelet2 map will be used as a "waypoints" tag.
-    lanelet2_map_path: $(var lanelet2_map_path) # The lanelet2 map path
+    lanelet2_map_path: $(var lanelet2_map_path) # Path to a lanelet2 .osm map file, or a directory containing .osm files
+
+# ###### ORIGINAL (DO NOT EDIT) ######
+# /**:
+#   ros__parameters:
+#     allow_unsupported_version: true             # flag to load unsupported format_version anyway. If true, just prints warning.
+#     center_line_resolution: 5.0                 # [m]
+#     use_waypoints: true                         # "centerline" in the Lanelet2 map will be used as a "waypoints" tag.
+#     lanelet2_map_path: $(var lanelet2_map_path) # Path to a lanelet2 .osm map file, or a directory containing .osm files
