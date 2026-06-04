@@ -14,6 +14,16 @@
   <arg name="control_input_objects_topic_name" default="/perception/object_recognition/objects"/>
   <arg name="control_input_pointcloud_topic_name" default="/perception/obstacle_segmentation/pointcloud"/>
 
+  <!-- SOLIO specific parameter -->
+  <let name="default_vehicle_cmd_gate_param_path" value="$(find-pkg-share autoware_launch)/config/control/vehicle_cmd_gate/vehicle_cmd_gate.param.yaml" unless="$(equals $(var vehicle_model) solio)"/>
+  <let
+    name="default_vehicle_cmd_gate_param_path"
+    value="$(find-pkg-share autoware_launch)/config/control/vehicle_cmd_gate/vehicle_cmd_gate_solio.param.yaml"
+    if="$(equals $(var vehicle_model) solio)"
+  />
+  <log message="vehicle_cmd_gate_param_path: $(var default_vehicle_cmd_gate_param_path)"/>
+  <arg name="vehicle_cmd_gate_param_path" default="$(var default_vehicle_cmd_gate_param_path)"/>
+
   <!-- Global parameters -->
   <group scoped="false">
     <include file="$(find-pkg-share autoware_global_parameter_loader)/launch/global_params.launch.py">
@@ -54,7 +64,7 @@
     <arg name="nearest_search_param_path" value="$(find-pkg-share autoware_launch)/config/control/common/nearest_search.param.yaml"/>
 
     <!-- package param path -->
-    <arg name="vehicle_cmd_gate_param_path" value="$(find-pkg-share autoware_launch)/config/control/vehicle_cmd_gate/vehicle_cmd_gate.param.yaml"/>
+    <arg name="vehicle_cmd_gate_param_path" value="$(var vehicle_cmd_gate_param_path)"/>
     <arg name="control_command_gate_param_path" value="$(find-pkg-share autoware_launch)/config/control/control_command_gate/control_command_gate.param.yaml"/>
     <arg name="lane_departure_checker_param_path" value="$(find-pkg-share autoware_launch)/config/control/lane_departure_checker/lane_departure_checker.param.yaml"/>
     <arg name="control_validator_param_path" value="$(find-pkg-share autoware_launch)/config/control/control_validator/control_validator.param.yaml"/>

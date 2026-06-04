@@ -1,34 +1,30 @@
 /**:
   ros__parameters:
-    inputs: [11, 12, 13, 14, 21]  # See autoware_command_mode_types/sources.hpp
-    inputs_names:
-      11: stop
-      12: main
-      13: local
-      14: remote
-      21: emergency_stop
-    rate: 10.0
-    builtin_emergency_acceleration: -2.4
-    stop_hold_acceleration: -1.5 # If SOLIO, the value should be changed to -4.0 to avoid restart after stop. https://tier4.atlassian.net/browse/T4DEV-54389
+    update_rate: 10.0
+    system_emergency_heartbeat_timeout: 0.5
+    use_emergency_handling: true
+    check_external_emergency_heartbeat: $(var check_external_emergency_heartbeat)
+    enable_cmd_limit_filter: true
+    filter_activated_count_threshold: 5
+    filter_activated_velocity_threshold: 1.0
+    external_emergency_stop_heartbeat_timeout: 0.0
+    stop_hold_acceleration: -4.0 # solio specific value to avoid restart after stop. https://tier4.atlassian.net/browse/T4DEV-54389
     emergency_acceleration: -2.4
-    moderate_stop_acceleration: -1.5
-    diag_timeout_warn_duration: 1.0
-    diag_timeout_error_duration: 2.0
+    moderate_stop_service_acceleration: -1.5
     stop_check_duration: 1.0
-    enable_command_limit_filter: true
-    nominal_filter:
+    nominal:
       vel_lim: 25.0
       reference_speed_points: [0.1, 1.388, 2.778, 4.167, 5.556, 6.944, 8.333, 9.722, 11.11, 12.5, 13.89, 15.28, 16.8]
       steer_cmd_lim: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.06, 0.06, 0.025, 0.025, 0.025, 0.025]
-      steer_rate_lim_for_steer_cmd: [0.5, 0.5, 0.4, 0.3, 0.15, 0.07, 0.05, 0.035, 0.035, 0.035, 0.035, 0.035, 0.035]
+      steer_rate_lim_for_steer_cmd: [0.5 , 0.5 , 0.4 , 0.3 , 0.15  ,0.07 , 0.05, 0.035, 0.035, 0.035, 0.035, 0.035, 0.035]
       lon_acc_lim_for_lon_vel: [10.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0]
-      lon_jerk_lim_for_lon_acc: [90.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0]  # The first element is required for quick pedal changes when stopping and starting.
+      lon_jerk_lim_for_lon_acc: [90.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0] # The first element is required for quick pedal changes when stopping and starting.
       lat_acc_lim_for_steer_cmd: [2.0, 2.0, 2.0, 2.0, 2.5, 2.5, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
       lat_jerk_lim_for_steer_cmd: [0.869, 0.869, 1.5, 2.0, 2.5, 2.5, 4.0, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]
       lat_jerk_lim_for_steer_rate: 10.0
       steer_cmd_diff_lim_from_current_steer: [1.0, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]
-    transition_filter:
-      vel_lim: 50.0
+    on_transition:
+      vel_lim: 60.0
       reference_speed_points: [20.0, 30.0]
       steer_cmd_lim: [1.0, 0.8]
       steer_rate_lim_for_steer_cmd: [1.0, 0.8]
