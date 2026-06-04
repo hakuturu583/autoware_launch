@@ -2663,7 +2663,6 @@ Visualization Manager:
                   Value: true
                 System:
                   Grid: true
-                  MRM Summary: true
                   TF: true
                   Value: false
                   Vehicle:
