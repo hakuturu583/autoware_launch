@@ -36,6 +36,7 @@ units:
       - { type: link, link: /control/overrun_stop_point }
       - { type: link, link: /control/will_overrun_stop_point }
       - { type: link, link: /control/yaw_deviation-error }
+      - { type: link, link: /control/017-incoming_message_timeout }
 
   - path: /control/comfortable_stop
     type: and
@@ -158,3 +159,9 @@ units:
     type: diag
     node: control_validator
     name: control_validation_yaw_deviation
+
+  - path: /control/017-incoming_message_timeout
+    type: diag
+    node: controller_node_exe
+    name: incoming_message_timeout
+    timeout: 3.0

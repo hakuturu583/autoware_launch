@@ -23,7 +23,6 @@ units:
   - path: /system/emergency_stop
     type: and
     list:
-      - { type: link, link: /system/001-topic_status-error }
       - { type: link, link: /system/002-emergency_stop_operation-error }
       - { type: link, link: /system/003-duplicated_node_checker }
 
@@ -35,12 +34,6 @@ units:
 
   - path: /system/none
     type: and
-
-  - path: /system/001-topic_status-error
-    type: warn-to-ok
-    item:
-      type: link
-      link: /system/001-topic_status
 
   - path: /system/002-emergency_stop_operation-error
     type: warn-to-ok
@@ -58,12 +51,6 @@ units:
     list:
       - { type: link, link: /system/002-emergency_stop_operation/vehicle_cmd_gate }
       - { type: link, link: /system/002-emergency_stop_operation/control_command_gate }
-
-  - path: /system/001-topic_status
-    type: diag
-    node: topic_state_monitor_system_emergency_control_cmd
-    name: system_topic_status
-    timeout: 1.0
 
   - path: /system/002-emergency_stop_operation/vehicle_cmd_gate
     type: diag
