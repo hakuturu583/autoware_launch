@@ -1,0 +1,18 @@
+<launch>
+  <!-- camera names -->
+  <arg name="all_camera_ids" default="[0, 2, 5, 6]" description="camera index list(max 4 devices)"/>
+  <!-- Whether to activate some nodes or not -->
+  <arg name="enable_image_decompressor" default="false"/>
+  <arg name="use_sensor_data_qos" default="true" description="flag to switch data QoS"/>
+  <arg name="disable_camera_driver" default="false" description="If true, this launcher runs image_transport_decompressor instead of camera driver"/>
+
+  <include file="$(find-pkg-share edge_auto_jetson_launch)/launch/tlr/traffic_light_multiple.launch.py">
+    <arg name="all_camera_ids" value="$(var all_camera_ids)"/>
+  </include>
+
+  <!-- sensor trigger -->
+  <let name="camera_trigger_param_path" value="$(find-pkg-share individual_params)/config/$(env VEHICLE_ID default)/$(env SENSOR_MODEL aip_xx1)/tier4-c2/trigger.param.yaml"/>
+  <node pkg="sensor_trigger" exec="sensor_trigger_exe" name="sensor_trigger2" namespace="/sensing/camera/">
+    <param from="$(var camera_trigger_param_path)"/>
+  </node>
+</launch>

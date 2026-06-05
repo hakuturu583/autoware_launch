@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="camera_id"/>
+  <let name="namespace" value="camera$(var camera_id)"/>
+
+  <arg name="use_high_accuracy_detection" default="true" description="enable fine position adjustment of traffic light"/>
+  <arg name="high_accuracy_detection_type" default="whole_image_detection" description="select high accuracy detector type for traffic light recognition: fine_detection or whole_image_detection"/>
+
+  <let name="camera_name" value="camera$(var camera_id)"/>
+  <let name="container" value="traffic_light_node_container$(var camera_id)"/>
+
+  <arg name="traffic_light_fine_detector_param_path" default="$(find-pkg-share edge_auto_jetson_launch)/config/traffic_light_fine_detector.param.yaml"/>
+  <arg name="car_traffic_light_classifier_param_path" default="$(find-pkg-share edge_auto_jetson_launch)/config/car_traffic_light_classifier.param.yaml"/>
+  <arg name="pedestrian_traffic_light_classifier_param_path" default="$(find-pkg-share edge_auto_jetson_launch)/config/pedestrian_traffic_light_classifier.param.yaml"/>
+  <arg name="traffic_light_roi_visualizer_param_path" default="$(find-pkg-share edge_auto_jetson_launch)/config/traffic_light_visualization.param.yaml"/>
+  <arg name="whole_image_detector_param_path" default="$(find-pkg-share edge_auto_jetson_launch)/config/traffic_light_yolox_detector.param.yaml"/>
+
+  <let name="input/image" value="/sensing/camera/$(var camera_name)/image_raw"/>
+  <let name="input/camera_info" value="/sensing/camera/$(var camera_name)/camera_info"/>
+  <let name="output/rois" value="/perception/traffic_light_recognition/$(var camera_name)/detection/rois"/>
+  <let name="output/traffic_signals" value="/perception/traffic_light_recognition/$(var camera_name)/classification/traffic_signals"/>
+  <let name="output/car/traffic_signals" value="/perception/traffic_light_recognition/$(var camera_name)/classification/classified/car/traffic_signals"/>
+  <let name="output/pedestrian/traffic_signals" value="/perception/traffic_light_recognition/$(var camera_name)/classification/classified/pedestrian/traffic_signals"/>
+  <let name="map_based_detector_output_topic" value="rough/rois" if="$(var use_high_accuracy_detection)"/>
+  <let name="map_based_detector_output_topic" value="$(var output/rois)" unless="$(var use_high_accuracy_detection)"/>
+
+  <!-- TLR pipeline -->
+  <group>
+    <!-- map based detector -->
+    <group>
+      <push-ros-namespace namespace="perception/traffic_light_recognition/$(var camera_name)"/>
+      <node pkg="topic_tools" exec="relay" name="traffic_light_camera_info_relay" args="$(var input/camera_info) camera_info"/>
+      <group>
+        <push-ros-namespace namespace="detection"/>
+        <include file="$(find-pkg-share autoware_traffic_light_map_based_detector)/launch/traffic_light_map_based_detector.launch.xml">
+          <arg name="input/camera_info" value="$(var input/camera_info)"/>
+          <arg name="min_timestamp_offset" value="-0.3"/>
+          <arg name="expect/rois" value="expect/rois"/>
+          <arg name="output/rois" value="$(var map_based_detector_output_topic)"/>
+          <arg name="output/camera_info" value="camera_info"/>
+        </include>
+      </group>
+      <node pkg="rclcpp_components" exec="component_container_mt" name="$(var container)" namespace="/"/>
+      <!-- fine detector and classifier -->
+      <include file="$(find-pkg-share edge_auto_jetson_launch)/launch/tlr/traffic_light_node_container.launch.py">
+        <arg name="traffic_light_fine_detector_param_path" value="$(var traffic_light_fine_detector_param_path)"/>
+        <arg name="car_traffic_light_classifier_param_path" value="$(var car_traffic_light_classifier_param_path)"/>
+        <arg name="pedestrian_traffic_light_classifier_param_path" value="$(var pedestrian_traffic_light_classifier_param_path)"/>
+        <arg name="traffic_light_roi_visualizer_param_path" value="$(var traffic_light_roi_visualizer_param_path)"/>
+        <arg name="whole_image_detector_param_path" value="$(var whole_image_detector_param_path)"/>
+        <arg name="input/image" value="$(var input/image)"/>
+        <arg name="input/camera_info" value="$(var input/camera_info)"/>
+        <arg name="use_high_accuracy_detection" value="$(var use_high_accuracy_detection)"/>
+        <arg name="high_accuracy_detection_type" value="$(var high_accuracy_detection_type)"/>
+        <arg name="use_intra_process" value="true"/>
+        <arg name="use_multithread" value="true"/>
+        <arg name="output/rois" value="$(var output/rois)"/>
+        <arg name="output/traffic_signals" value="$(var output/traffic_signals)"/>
+        <arg name="output/car/traffic_signals" value="$(var output/car/traffic_signals)"/>
+        <arg name="output/pedestrian/traffic_signals" value="$(var output/pedestrian/traffic_signals)"/>
+        <arg name="container" value="$(var container)"/>
+      </include>
+    </group>
+  </group>
+
+  <!-- camera driver -->
+  <group unless="$(var disable_camera_driver)">
+    <let name="container_name" value="$(var container)"/>
+
+    <include file="$(find-pkg-share edge_auto_jetson_launch)/launch/v4l2_camera.launch.xml">
+      <arg name="container" value="$(var container_name)"/>
+      <arg name="camera_id" value="$(var camera_id)"/>
+    </include>
+  </group>
+</launch>
