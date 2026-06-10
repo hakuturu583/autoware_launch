@@ -9,7 +9,7 @@ on:
 
 jobs:
   check-if-merged:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: github.event.pull_request.merged == true
     outputs:
       beta_version: ${{ steps.extract-version.outputs.beta_version }}
@@ -22,7 +22,7 @@ jobs:
 
   sync-beta:
     needs: check-if-merged
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         product: [xx1, xx1.solio]

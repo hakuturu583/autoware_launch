@@ -10,7 +10,7 @@ on:
 
 jobs:
   compute-config:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
       known_branch: ${{ steps.parse-release-info.outputs.known_branch }}
       labels: ${{ steps.parse-release-info.outputs.labels }}
