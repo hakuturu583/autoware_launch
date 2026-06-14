@@ -20,3 +20,4 @@ edits:
   - { type: remove, path: /planning/018-trajectory_yaw_deviation_validation-error }
   - { type: remove, path: /planning/019-trajectory_distance_deviation_validation-error }
   - { type: remove, path: /planning/020-boundary_departure-error }
+  - { type: remove, path: /planning/021-incoming_message_timeout-error }

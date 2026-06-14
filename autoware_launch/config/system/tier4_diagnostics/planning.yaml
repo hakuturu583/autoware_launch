@@ -42,7 +42,7 @@ units:
       - { type: link, link: /planning/018-trajectory_yaw_deviation_validation-error }
       - { type: link, link: /planning/019-trajectory_distance_deviation_validation-error }
       # - { type: link, link: /planning/020-boundary_departure-error }
-      - { type: link, link: /planning/021-incoming_message_timeout }
+      - { type: link, link: /planning/021-incoming_message_timeout-error }
 
   - path: /planning/comfortable_stop
     type: and
@@ -166,6 +166,11 @@ units:
     item:
       type: link
       link: /planning/020-boundary_departure
+
+  - path: /planning/021-incoming_message_timeout-error
+    type: and
+    list:
+      - { type: link, link: /planning/021-incoming_message_timeout }
 
   - path: /planning/003-trajectory_finite_validation
     type: diag
