@@ -13,7 +13,7 @@
     use_sensor_time: true
     radar_info_rate_subsample: 10
     configuration_vehicle_length: 4.4 #  0.8 + 2.75 + 0.85 # wheel_base + front_overhang + rear_overhang
-    configuration_vehicle_width: 1.695 # 1.485 + 0.105 + 0.105  # wheel_tread + left_overhang + right_overhang
+    configuration_vehicle_width:  1.84 # 1.485 + 0.1775 + 0.1775  # wheel_tread + left_overhang + right_overhang
     configuration_vehicle_height: 2.5
     configuration_vehicle_wheelbase: 2.75
     diagnostics:
