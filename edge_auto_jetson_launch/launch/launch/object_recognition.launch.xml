@@ -30,6 +30,8 @@
       <param name="precision" value="$(var yolox_precision)"/>
       <param name="dla_core_id" value="$(var dla_core_id)"/>
       <param name="build_only" value="$(var build_engine_only)"/>
+      <param name="roi_remap_path" value="$(find-pkg-share edge_auto_jetson_launch)/config/roi_label_remap.csv"/>
+      <param name="roi_to_semantic_segmentation_remap_path" value="$(find-pkg-share edge_auto_jetson_launch)/config/roi_to_semseg_label_remap.csv"/>
     </node>
   </group>
 
@@ -50,6 +52,8 @@
         <param name="label_path" value="$(var label_path)"/>
         <param name="precision" value="$(var yolox_precision)"/>
         <param name="dla_core_id" value="$(var dla_core_id)"/>
+        <param name="roi_remap_path" value="$(find-pkg-share edge_auto_jetson_launch)/config/roi_label_remap.csv"/>
+        <param name="roi_to_semantic_segmentation_remap_path" value="$(find-pkg-share edge_auto_jetson_launch)/config/roi_to_semseg_label_remap.csv"/>
         <extra_arg name="use_intra_process_comms" value="$(var use_intra_process)"/>
       </composable_node>
 
