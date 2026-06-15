@@ -12,7 +12,7 @@
 
   <exec_depend>accelerated_image_processor</exec_depend>
   <exec_depend>autoware_bytetrack</exec_depend>
-  <exec_depend>autoware_diag_bridge</exec_depend>
+  <exec_depend>autoware_diagnostics_bridge</exec_depend>
   <exec_depend>autoware_glog_component</exec_depend>
   <exec_depend>autoware_image_transport_decompressor</exec_depend>
   <exec_depend>autoware_tensorrt_yolox</exec_depend>
