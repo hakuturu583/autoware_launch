@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 import launch
 from launch.actions import DeclareLaunchArgument
 from launch.actions import OpaqueFunction
@@ -360,6 +362,8 @@ def make_blockage_diag_nodes(context):
 
 def launch_setup(context, *args, **kwargs):
     env = make_agnocast_env(context)
+    use_agnocast = os.getenv("ENABLE_AGNOCAST") == "1"
+    container_package = "agnocastlib" if use_agnocast else "rclcpp_components"
     nodes = []
 
     nodes.extend(make_nebula_nodes(context))
@@ -376,7 +380,7 @@ def launch_setup(context, *args, **kwargs):
     container = ComposableNodeContainer(
         name=LaunchConfiguration("container_name"),
         namespace="pointcloud_preprocessor",
-        package="rclcpp_components",
+        package=container_package,
         executable=LaunchConfiguration("container_executable"),
         composable_node_descriptions=nodes,
         output="both",
@@ -519,15 +523,21 @@ def generate_launch_description():
         description="path to parameter file of ring outlier filter node",
     )
 
+    use_agnocast = os.getenv("ENABLE_AGNOCAST") == "1"
+    container_exec = "agnocast_component_container" if use_agnocast else "component_container"
+    container_exec_mt = (
+        "agnocast_component_container_mt" if use_agnocast else "component_container_mt"
+    )
+
     set_container_executable = SetLaunchConfiguration(
         "container_executable",
-        "component_container",
+        container_exec,
         condition=UnlessCondition(LaunchConfiguration("use_multithread")),
     )
 
     set_container_mt_executable = SetLaunchConfiguration(
         "container_executable",
-        "component_container_mt",
+        container_exec_mt,
         condition=IfCondition(LaunchConfiguration("use_multithread")),
     )
 
