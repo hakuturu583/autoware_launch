@@ -361,19 +361,69 @@ def make_blockage_diag_nodes(context):
 
 
 def launch_setup(context, *args, **kwargs):
+    # Container layout:
+    #
+    # === ENABLE_AGNOCAST=1 ===
+    #
+    #   [lidar container] --Agnocast--> [pointcloud_container                          ]
+    #    [lidar driver]                  [gpu_preprocessor]  --+
+    #                                                          +--> [gpu_concatenation]
+    #   [lidar container] --Agnocast-->   [gpu_preprocessor] --+
+    #    [lidar driver]                                        |
+    #                                                          |
+    #   [lidar container] --Agnocast-->   [gpu_preprocessor] --+
+    #    [lidar driver]
+    #
+    #
+    # === ENABLE_AGNOCAST=0 ===
+    #
+    #   [lidar container                      ] --ROS/DDS--> [pointcloud_container]
+    #    [lidar driver] -> [gpu_preprocessor]                 [cpu_concatenation]
+    #                                                          ^
+    #   [lidar container                      ] --ROS/DDS------+
+    #    [lidar driver] -> [gpu_preprocessor]                  |
+    #                                                          |
+    #   [lidar container                      ] --ROS/DDS------+
+    #    [lidar driver] -> [gpu_preprocessor]
+
     env = make_agnocast_env(context)
     use_agnocast = os.getenv("ENABLE_AGNOCAST") == "1"
     container_package = "agnocastlib" if use_agnocast else "rclcpp_components"
+
+    use_cuda = IfCondition(LaunchConfiguration("use_cuda_preprocessor")).evaluate(context)
+    use_shared = IfCondition(LaunchConfiguration("use_shared_container")).evaluate(context)
+    use_blockage_diag = IfCondition(LaunchConfiguration("enable_blockage_diag")).evaluate(context)
+
+    if use_cuda and use_shared:
+        lidar_nodes = make_nebula_nodes(context)
+        if use_blockage_diag:
+            lidar_nodes += make_blockage_diag_nodes(context)
+
+        lidar_container = ComposableNodeContainer(
+            name=LaunchConfiguration("lidar_container_name"),
+            namespace="pointcloud_preprocessor",
+            package=container_package,
+            executable=LaunchConfiguration("container_executable"),
+            composable_node_descriptions=lidar_nodes,
+            output="both",
+            additional_env=env,
+        )
+        load_cuda_preprocessor = LoadComposableNodes(
+            composable_node_descriptions=make_cuda_preprocessor_nodes(context),
+            target_container=LaunchConfiguration("container_name"),
+        )
+        return [lidar_container, load_cuda_preprocessor]
+
     nodes = []
 
     nodes.extend(make_nebula_nodes(context))
 
-    if IfCondition(LaunchConfiguration("use_cuda_preprocessor")).evaluate(context):
+    if use_cuda:
         nodes.extend(make_cuda_preprocessor_nodes(context))
     else:
         nodes.extend(make_preprocessor_nodes(context))
 
-    if IfCondition(LaunchConfiguration("enable_blockage_diag")).evaluate(context):
+    if use_blockage_diag:
         nodes.extend(make_blockage_diag_nodes(context))
 
     # set container to run all required components in the same process

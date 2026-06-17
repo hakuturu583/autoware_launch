@@ -178,10 +178,8 @@ def load_sub_launches_from_yaml(context, *args, **kwargs):
                 ("vehicle_id", LaunchConfiguration("vehicle_id")),
                 ("use_pointcloud_container", LaunchConfiguration("use_pointcloud_container")),
                 ("pointcloud_container_name", LaunchConfiguration("pointcloud_container_name")),
-                # PLEASE NOTE!
-                # We intentionally set `use_cuda_preprocessor` to **FALSE**,
-                # because we do not want to use GPU implementation for pointcloud concatenation.
-                ("use_cuda_preprocessor", "False"),
+                # CUDA concat only in the "cuda" pipeline (= shared container); else CPU concat.
+                ("use_cuda", base_parameters["use_shared_container"]),
             ],
         )
     )
@@ -222,22 +220,12 @@ def generate_launch_description():
     add_launch_arg("enable_blockage_diag", "false")
     add_launch_arg("return_mode", "Dual")
 
-    # ====================================================================================
-    # PLEASE NOTE!
-
-    # In XX1, only the pointcloud preprocessor uses the CUDA implementation,
-    # while concatenation uses the CPU implementation.
-
-    # Although `use_shared_container` is normally required to be true when `use_cuda_preprocessor` is true,
-    # in this case, we are intentionally setting them to true and false respectively.
-
-    # For <lidar name>.launch.xml, `use_cuda_preprocessor` is passed as this definition in `load_sub_launches_from_yaml()`,
-    # but for the pointcloud_preprocessor.launch.py, it is always passed as **FALSE**.
-
-    # Currently, to perform all pre-processing including concatenation on the GPU,
-    # all nodes must be placed in a single container.
-    # However, this approach lacks fault tolerance, so will not be adopted for a while.
-    add_launch_arg("use_shared_container", "false")
+    # "cuda" pipeline (shared container CUDA preprocessor + CUDA concat) requires Agnocast;
+    # without it, co-locating multiple cuda_preprocessor instances aborts with
+    # cudaErrorInvalidDevice. So default use_shared_container to ENABLE_AGNOCAST, falling back to
+    # the per-LiDAR CUDA preprocessor + CPU concat when Agnocast is off. Can be overridden.
+    use_agnocast = os.getenv("ENABLE_AGNOCAST") == "1"
+    add_launch_arg("use_shared_container", "true" if use_agnocast else "false")
     add_launch_arg("use_cuda_preprocessor", "true")
     add_launch_arg(
         "agnocast_heaphook_path",
