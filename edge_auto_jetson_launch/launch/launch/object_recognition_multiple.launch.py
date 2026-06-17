@@ -18,8 +18,11 @@ import json
 
 import launch
 from launch.actions import DeclareLaunchArgument
+from launch.actions import GroupAction
 from launch.actions import IncludeLaunchDescription
+from launch.actions import LogInfo
 from launch.actions import OpaqueFunction
+from launch.actions import TimerAction
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
@@ -71,6 +74,55 @@ def create_image_decompressor(camera_id, container_name):
     return IncludeLaunchDescription(include, launch_arguments=arguments)
 
 
+def wrap_with_delay(action, delay_sec, camera_id):
+    description = f"v4l2 initialization for camera{camera_id}"
+    if delay_sec <= 0.0:
+        return GroupAction(
+            actions=[
+                LogInfo(
+                    msg=(
+                        "[v4l2_camera.launch] "
+                        f"camera{camera_id}: scheduling {description} "
+                        f"with startup_delay_sec={delay_sec:.1f}"
+                    )
+                ),
+                LogInfo(
+                    msg=(
+                        "[v4l2_camera.launch] "
+                        f"camera{camera_id}: starting {description} "
+                        f"after startup_delay_sec={delay_sec:.1f}"
+                    )
+                ),
+                action,
+            ]
+        )
+
+    return GroupAction(
+        actions=[
+            LogInfo(
+                msg=(
+                    "[v4l2_camera.launch] "
+                    f"camera{camera_id}: scheduling {description} "
+                    f"with startup_delay_sec={delay_sec:.1f}"
+                )
+            ),
+            TimerAction(
+                period=delay_sec,
+                actions=[
+                    LogInfo(
+                        msg=(
+                            "[v4l2_camera.launch] "
+                            f"camera{camera_id}: starting {description} "
+                            f"after startup_delay_sec={delay_sec:.1f}"
+                        )
+                    ),
+                    action,
+                ],
+            ),
+        ]
+    )
+
+
 def launch_setup(context, *args, **kwargs):
 
     # Load all camera ids
@@ -81,6 +133,9 @@ def launch_setup(context, *args, **kwargs):
     live_sensor = LaunchConfiguration("live_sensor").perform(context)
     container_name = LaunchConfiguration("container_name").perform(context)
     yolox_precision = LaunchConfiguration("yolox_precision").perform(context)
+    camera_start_interval_sec = float(
+        LaunchConfiguration("camera_start_interval_sec").perform(context)
+    )
 
     # Convert string to list safely
     object_recognition_camera_ids = json.loads(object_recognition_camera_ids)
@@ -95,8 +150,12 @@ def launch_setup(context, *args, **kwargs):
     # camera driver and image decompressor
     if bool(strtobool(live_sensor)):
         camera_drivers = [
-            create_camera_driver(camera_id, container_name)
-            for camera_id in camera_driver_camera_ids
+            wrap_with_delay(
+                create_camera_driver(camera_id, container_name),
+                camera_start_interval_sec * process_index,
+                camera_id,
+            )
+            for process_index, camera_id in enumerate(camera_driver_camera_ids)
         ]
         image_decompressors = []
     if not bool(strtobool(live_sensor)):
@@ -117,6 +176,11 @@ def generate_launch_description():
             DeclareLaunchArgument("live_sensor", description="live camera driver or not"),
             DeclareLaunchArgument(
                 "container_name", description="container name for object recognition"
+            ),
+            DeclareLaunchArgument(
+                "camera_start_interval_sec",
+                default_value="0.0",
+                description="interval seconds between each camera driver startup",
             ),
             OpaqueFunction(function=launch_setup),
         ]

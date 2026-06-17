@@ -5,9 +5,12 @@
   <arg name="enable_image_decompressor" default="false"/>
   <arg name="use_sensor_data_qos" default="true" description="flag to switch data QoS"/>
   <arg name="disable_camera_driver" default="false" description="If true, this launcher runs image_transport_decompressor instead of camera driver"/>
+  <arg name="camera_start_interval_sec" default="0.0" description="Interval seconds between each camera driver startup."/>
 
   <include file="$(find-pkg-share edge_auto_jetson_launch)/launch/tlr/traffic_light_multiple.launch.py">
     <arg name="all_camera_ids" value="$(var all_camera_ids)"/>
+    <arg name="disable_camera_driver" value="$(var disable_camera_driver)"/>
+    <arg name="camera_start_interval_sec" value="$(var camera_start_interval_sec)"/>
   </include>
 
   <!-- sensor trigger -->
