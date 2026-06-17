@@ -361,6 +361,31 @@ def make_blockage_diag_nodes(context):
 
 
 def launch_setup(context, *args, **kwargs):
+    # Container layout:
+    #
+    # === ENABLE_AGNOCAST=1 ===
+    #
+    #   [lidar container] --Agnocast--> [pointcloud_container                          ]
+    #    [lidar driver]                  [gpu_preprocessor]  --+
+    #                                                          +--> [gpu_concatenation]
+    #   [lidar container] --Agnocast-->   [gpu_preprocessor] --+
+    #    [lidar driver]                                        |
+    #                                                          |
+    #   [lidar container] --Agnocast-->   [gpu_preprocessor] --+
+    #    [lidar driver]
+    #
+    #
+    # === ENABLE_AGNOCAST=0 ===
+    #
+    #   [lidar container                      ] --ROS/DDS--> [pointcloud_container]
+    #    [lidar driver] -> [gpu_preprocessor]                 [cpu_concatenation]
+    #                                                          ^
+    #   [lidar container                      ] --ROS/DDS------+
+    #    [lidar driver] -> [gpu_preprocessor]                  |
+    #                                                          |
+    #   [lidar container                      ] --ROS/DDS------+
+    #    [lidar driver] -> [gpu_preprocessor]
+
     env = make_agnocast_env(context)
     use_agnocast = os.getenv("ENABLE_AGNOCAST") == "1"
     container_package = "agnocastlib" if use_agnocast else "rclcpp_components"
