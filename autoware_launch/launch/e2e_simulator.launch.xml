@@ -20,9 +20,6 @@
   <arg name="splatsim_scene_yaml" default="" description="Path to splatsim scene YAML (required when render_with_splatsim is true)"/>
   <arg name="splatsim_carla_host" default="localhost"/>
   <arg name="splatsim_carla_port" default="2000"/>
-  <arg name="splatsim_spawn_lanelet_id" default="2303321"/>
-  <arg name="splatsim_spawn_s" default="0.0"/>
-  <arg name="splatsim_vehicle_type" default="vehicle.toyota.prius"/>
   <arg name="splatsim_timeout_seconds" default="3600.0"/>
   <arg name="splatsim_image_topic" default="/splatsim/image_raw"/>
   <arg name="splatsim_camera_info_topic" default="/splatsim/camera_info"/>
@@ -64,15 +61,14 @@
       <arg name="vehicle_model" value="$(var vehicle_model)"/>
       <arg name="use_sim_time" value="$(var use_sim_time)"/>
       <arg name="spawn_point" value="$(var spawn_point)"/>
+      <!-- Align role_name with autoware_carla_scenario (EntityRole.ego() == "Ego") for splatsim attach mode -->
+      <arg name="ego_vehicle_role_name" value="Ego"/>
     </include>
 
     <include file="$(find-pkg-share splatsim)/launch/splatsim_scenario.launch.xml" if="$(var render_with_splatsim)">
       <arg name="carla_host" value="$(var splatsim_carla_host)"/>
       <arg name="carla_port" value="$(var splatsim_carla_port)"/>
       <arg name="scene_yaml" value="$(var splatsim_scene_yaml)"/>
-      <arg name="spawn_lanelet_id" value="$(var splatsim_spawn_lanelet_id)"/>
-      <arg name="spawn_s" value="$(var splatsim_spawn_s)"/>
-      <arg name="vehicle_type" value="$(var splatsim_vehicle_type)"/>
       <arg name="timeout_seconds" value="$(var splatsim_timeout_seconds)"/>
       <arg name="image_topic" value="$(var splatsim_image_topic)"/>
       <arg name="camera_info_topic" value="$(var splatsim_camera_info_topic)"/>
