@@ -29,6 +29,12 @@
     </include>
   </group>
 
+  <!-- relay trajectory for MOT -->
+  <node pkg="topic_tools" exec="relay" name="relay_trajectory_for_mot" namespace="/planning/scenario_planning" output="screen">
+    <param name="input_topic" value="/planning/trajectory"/>
+    <param name="output_topic" value="/planning/scenario_planning/trajectory"/>
+  </node>
+
   <include file="$(find-pkg-share autoware_launch)/config/planning/preset/$(var module_preset)_preset.yaml"/>
 
   <include file="$(find-pkg-share tier4_planning_launch)/launch/planning.launch.xml">
