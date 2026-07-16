@@ -1,4 +1,5 @@
 # This file is used only when e2e_simulator.launch.xml is launched, or when traffic_light_recognition/fusion_only:=false.
+# This file name is not wrong. The first traffic_light means the camera name in gen1.
 /**:
   ros__parameters:
     max_vibration_pitch: 0.01745329251   # -0.5 ~ 0.5 deg in camera frame
@@ -11,4 +12,4 @@
     max_timestamp_offset: 0.0
     timestamp_sample_len: 0.02
     car_traffic_light_max_angle_range: 40.0
-    pedestrian_traffic_light_max_angle_range: 80.0
+    pedestrian_traffic_light_max_angle_range: 70.0
