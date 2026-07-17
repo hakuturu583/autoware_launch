@@ -32,6 +32,7 @@
     <include file="$(find-pkg-share tier4_autoware_api_extension_launch)/launch/tier4_autoware_api_extension.launch.xml">
       <arg name="rosbridge_enabled" value="$(var rosbridge_enabled)"/>
       <arg name="rosbridge_max_message_size" value="$(var rosbridge_max_message_size)"/>
+      <arg name="launch_api_0_4_3" value="true"/>
     </include>
   </group>
 </launch>
