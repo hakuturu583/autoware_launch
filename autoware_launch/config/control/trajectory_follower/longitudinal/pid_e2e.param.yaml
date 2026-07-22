@@ -6,7 +6,10 @@
     enable_overshoot_emergency: false
     enable_large_tracking_error_emergency: true
     enable_slope_compensation: true
-    enable_keep_stopped_until_steer_convergence: true
+    # The E2E planner's steering output has small frame-to-frame variation (inherent to a
+    # learned model), so it can fail to ever satisfy the steer-convergence tolerance below,
+    # keeping the vehicle stopped forever. Disable the dry-steering wait for the E2E stack.
+    enable_keep_stopped_until_steer_convergence: false
 
     # state transition
     drive_state_stop_dist: 0.5

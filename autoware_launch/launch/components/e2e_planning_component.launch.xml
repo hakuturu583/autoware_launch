@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="e2e_planner_mode" default="vad" description="'vad' or 'oneplanner'"/>
+  <arg name="use_sim_time" default="false"/>
+  <arg name="vehicle_model" default="sample_vehicle"/>
+  <arg name="sensor_model" default="sample_sensor_kit"/>
+  <arg name="data_path" default="$(env HOME)/autoware_data" description="Root data path (models expected in $(var data_path)/vad or $(var data_path)/ml_models/oneplanner)"/>
+  <arg name="launch_control" default="true" description="Launch control stack alongside E2E planner"/>
+  <arg name="oneplanner_param_path_override" default=""/>
+  <!-- oneplanner's raw output is smoothed/validated through trajectory_modifier + trajectory_optimizer
+       (the same post-processing autoware_diffusion_planner uses, since oneplanner's trajectory head
+       is itself diffusion_planner-based), so it can drive the *standard*, unmodified control stack.
+       vad has no such post-processing stage yet, so it keeps the reduced "e2e" checker preset. -->
+  <arg
+    name="control_module_preset"
+    default="$(eval &quot;'default' if '$(var e2e_planner_mode)' == 'oneplanner' else 'e2e'&quot;)"
+    description="Control preset used with the E2E planner"
+  />
+  <!-- MPC's isTrajectoryShapeChanged() compares the trajectory's far (multi-second-ahead) endpoint
+       across cycles and refuses to consider steering "converged" if it moved much; since oneplanner
+       re-infers the whole horizon every cycle, that endpoint drifts every cycle even after
+       trajectory_optimizer's smoothing, so "wait for steering to converge before moving" can hold
+       the vehicle stopped indefinitely. Use a param file with that dry-steering wait disabled for
+       oneplanner only (longitudinal_controller_mode itself must stay "pid" - the controller node
+       validates that value against its known algorithm names). -->
+  <arg
+    name="lon_controller_param_path_override"
+    default="$(eval &quot;'$(find-pkg-share autoware_launch)/config/control/trajectory_follower/longitudinal/pid_e2e.param.yaml' if '$(var e2e_planner_mode)' == 'oneplanner' else ''&quot;)"
+  />
+  <arg
+    name="lat_controller_param_path_override"
+    default="$(eval &quot;'$(find-pkg-share autoware_launch)/config/control/trajectory_follower/lateral/mpc_carla_e2e.param.yaml' if '$(var e2e_planner_mode)' == 'oneplanner' else ''&quot;)"
+  />
+
+  <!-- Mission planner (route/goal handling, Clear Route service, etc.) -->
+  <!-- The E2E planner still needs a route as one of its inputs, and RViz's routing
+       panel needs this node regardless of which planner produces the trajectory. -->
+  <group>
+    <push-ros-namespace namespace="planning"/>
+    <group>
+      <push-ros-namespace namespace="mission_planning"/>
+      <include file="$(find-pkg-share tier4_planning_launch)/launch/mission_planning/mission_planning.launch.xml">
+        <arg name="mission_planner_param_path" value="$(find-pkg-share autoware_launch)/config/planning/mission_planning/mission_planner/mission_planner.param.yaml"/>
+      </include>
+    </group>
+  </group>
+
+  <!-- E2E planner selection -->
+  <group if="$(eval &quot;'$(var e2e_planner_mode)' == 'oneplanner'&quot;)">
+    <include file="$(find-pkg-share autoware_tensorrt_oneplanner)/launch/oneplanner.launch.xml">
+      <arg name="model_path" value="$(var data_path)/ml_models/oneplanner"/>
+      <arg
+        name="oneplanner_param_path"
+        value="$(eval &quot;'$(var oneplanner_param_path_override)' if '$(var oneplanner_param_path_override)' != '' else '$(find-pkg-share autoware_tensorrt_oneplanner)/config/oneplanner.param.yaml'&quot;)"
+      />
+      <arg name="input_pointcloud" value="/sensing/lidar/concatenated/pointcloud"/>
+      <arg name="input_odometry" value="/localization/kinematic_state"/>
+      <arg name="input_acceleration" value="/localization/acceleration"/>
+      <arg name="input_route" value="/planning/route"/>
+      <arg name="input_vector_map" value="/map/vector_map"/>
+      <arg name="input_traffic_signals" value="/perception/traffic_light_recognition/traffic_signals"/>
+      <arg name="input_turn_indicators" value="/vehicle/status/turn_indicators_status"/>
+      <arg name="output_trajectories" value="/planning/generator/oneplanner/candidate_trajectories"/>
+    </include>
+
+    <!-- Post-process the raw candidate trajectory exactly like autoware_diffusion_planner does,
+         instead of feeding oneplanner's raw output straight to /planning/trajectory: filter/
+         validate it against objects+pointcloud (trajectory_modifier), then smooth it (jerk-filtered
+         smoother, spline/QP smoothing, kinematic feasibility enforcement, etc. in
+         trajectory_optimizer). This is what fixes the degenerate-trajectory MPC crash and the
+         raw-steering-noise "dry steering" stall at the source, rather than papering over them
+         downstream in control. -->
+    <include file="$(find-pkg-share autoware_trajectory_modifier)/launch/trajectory_modifier.launch.xml">
+      <arg name="trajectory_modifier_param_path" value="$(find-pkg-share autoware_launch)/config/planning/trajectory_generator/oneplanner/trajectory_modifier.param.yaml"/>
+      <arg name="input_candidate_trajectories" value="/planning/generator/oneplanner/candidate_trajectories"/>
+      <arg name="output_candidate_trajectories" value="/planning/generator/oneplanner/modified_candidate_trajectories"/>
+      <arg name="input_odometry" value="/localization/kinematic_state"/>
+      <arg name="input_acceleration" value="/localization/acceleration"/>
+      <arg name="input_objects_topic_name" value="/perception/object_recognition/objects"/>
+      <arg name="input_pointcloud_topic_name" value="/perception/obstacle_segmentation/pointcloud"/>
+    </include>
+    <include file="$(find-pkg-share autoware_trajectory_optimizer)/launch/trajectory_optimizer.launch.xml">
+      <arg name="trajectory_optimizer_param_path" value="$(find-pkg-share autoware_launch)/config/planning/trajectory_generator/oneplanner/trajectory_optimizer.param.yaml"/>
+      <arg name="input_trajectories" value="/planning/generator/oneplanner/modified_candidate_trajectories"/>
+      <arg name="output_traj" value="/planning/trajectory"/>
+      <!-- Nothing publishes an external_velocity_limit in this mode (no velocity_smoother /
+           external_velocity_limit_selector), so TrajectoryVelocityOptimizer's speed ceiling
+           falls back to this file's "max_vel" - the shared default (4.17 m/s, ~15 km/h) is a
+           conservative safety floor, not the vehicle's real limit, so override it here. -->
+      <arg name="common_param_path" value="$(find-pkg-share autoware_launch)/config/planning/trajectory_generator/oneplanner/common.param.yaml"/>
+    </include>
+  </group>
+
+  <!-- vad has no trajectory-optimizer stage yet, so it still publishes straight to /planning/trajectory
+       and relies on the reduced "e2e" control checker preset. -->
+  <group if="$(eval &quot;'$(var e2e_planner_mode)' == 'vad'&quot;)">
+    <include file="$(find-pkg-share autoware_tensorrt_vad)/launch/vad_carla_tiny.launch.xml">
+      <arg name="use_sim_time" value="$(var use_sim_time)"/>
+      <arg name="data_path" value="$(var data_path)"/>
+      <arg name="sensor_model" value="$(var sensor_model)"/>
+      <arg name="output_trajectory" value="/planning/trajectory"/>
+    </include>
+  </group>
+
+  <!-- Reuse tier4 control; oneplanner gets the standard preset (see control_module_preset above) -->
+  <group if="$(var launch_control)">
+    <include file="$(find-pkg-share autoware_launch)/launch/components/tier4_control_component.launch.xml">
+      <arg name="module_preset" value="$(var control_module_preset)"/>
+      <arg name="use_sim_time" value="$(var use_sim_time)"/>
+      <arg name="vehicle_model" value="$(var vehicle_model)"/>
+      <arg name="lat_controller_param_path_override" value="$(var lat_controller_param_path_override)"/>
+      <arg name="lon_controller_param_path_override" value="$(var lon_controller_param_path_override)"/>
+    </include>
+  </group>
+</launch>

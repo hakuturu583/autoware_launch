@@ -38,7 +38,13 @@
       num_threads: 4
 
       regularization:
-        enable: false
+        # Pulls the NDT solution toward /sensing/gnss/pose_with_covariance. In simple/symmetric
+        # environments (e.g. two plain parallel walls with little distinguishing geometry along
+        # their length), NDT can converge to a wrong-but-locally-good match offset by roughly a
+        # lane width, matching only one wall and estimating the vehicle outside its lane. CARLA's
+        # GNSS here is configured as near-perfect ground truth (0 noise stddev), so regularizing
+        # against it is an effective, low-risk anchor against this failure mode.
+        enable: true
 
         # Regularization scale factor
         scale_factor: 0.01
@@ -52,6 +58,13 @@
       # This value should be equal to or less than 'initial_estimate_particles_num' and more than 0.
       # If it is equal to 'initial_estimate_particles_num', the search will be the same as a full random search.
       n_startup_trials: 100
+
+      # By default yaw is searched blindly over the full [-pi, pi] range regardless of the
+      # initial pose given (this assumes GNSS-only initialization, which has no reliable yaw).
+      # In CARLA the initial pose comes from RViz's "2D Pose Estimate", where the user-dragged
+      # heading is meaningful, so trust it instead of risking convergence on a wrong-facing match.
+      trust_yaw_input: true
+      yaw_stddev_deg: 5.0
 
 
     validation:
@@ -109,12 +122,20 @@
       covariance_estimation:
         # Covariance estimation type
         # 0=FIXED_VALUE, 1=LAPLACE_APPROXIMATION, 2=MULTI_NDT, 3=MULTI_NDT_SCORE
-        covariance_estimation_type: 0
+        covariance_estimation_type: 3
 
         # Offset arrangement in covariance estimation [m]
         # initial_pose_offset_model_x & initial_pose_offset_model_y must have the same number of elements.
-        initial_pose_offset_model_x: [0.0, 0.0, 0.5, -0.5, 1.0, -1.0]
-        initial_pose_offset_model_y: [0.5, -0.5, 0.0, 0.0, 0.0, 0.0]
+        # The +-3.0m lateral entries were added because this map has long, plain, parallel walls
+        # on both sides of the lane with little distinguishing geometry along their length: NDT
+        # can lock onto the wrong wall, a full lane-width over, while still reporting a
+        # locally-good score. The original +-0.5m probes are too close to that wrong match's
+        # basin to detect it (its score there still looks locally sharp/confident); testing all
+        # the way out to roughly a lane width lets MULTI_NDT_SCORE actually re-converge onto that
+        # alternate match and see that it scores comparably, so it reports high lateral
+        # covariance for EKF to properly discount instead of snapping to it.
+        initial_pose_offset_model_x: [0.0, 0.0, 0.5, -0.5, 1.0, -1.0, 0.0, 0.0]
+        initial_pose_offset_model_y: [0.5, -0.5, 0.0, 0.0, 0.0, 0.0, 3.0, -3.0]
 
         # In MULTI_NDT_SCORE, the parameter that adjusts the estimated 2D covariance
         temperature: 0.05
@@ -132,3 +153,7 @@
 
       # Radius of input LiDAR range (used for diagnostics of dynamic map loading)
       lidar_radius: 100.0
+
+      # Publish debug/loaded_pointcloud_map.
+      # Enabling this will save the dynamic map loaded by NDT in memory.
+      publish_loaded_map: false

@@ -1,0 +1,26 @@
+/**:
+  ros__parameters:
+    # oneplanner mode does not use the MPT plugin today. Leaving it in the shared plugin list makes
+    # trajectory_optimizer try to instantiate it anyway, and on the current CARLA 0.10 setup that
+    # fails at startup with "mpt.use_acados must be initialized". Keep the oneplanner post-process
+    # chain limited to the plugins we actually validate in this stack.
+    plugin_names:
+      - "autoware::trajectory_optimizer::plugin::TrajectoryPointFixer"
+      - "autoware::trajectory_optimizer::plugin::TrajectoryKinematicFeasibilityEnforcer"
+      - "autoware::trajectory_optimizer::plugin::TrajectoryQPSmoother"
+      - "autoware::trajectory_optimizer::plugin::TrajectoryKinematicFeasibilityEnforcer"
+      - "autoware::trajectory_optimizer::plugin::TrajectoryVelocityOptimizer"
+      - "autoware::trajectory_optimizer::plugin::TrajectoryEBSmootherOptimizer"
+      - "autoware::trajectory_optimizer::plugin::TrajectorySplineSmoother"
+      - "autoware::trajectory_optimizer::plugin::TrajectoryExtender"
+
+    # Plugin activation flags - preserve the shared defaults except for MPT.
+    use_akima_spline_interpolation: true
+    use_eb_smoother: false
+    use_qp_smoother: true
+    use_trajectory_point_fixer: true
+    use_velocity_optimizer: true
+    use_trajectory_extender: false
+    use_kinematic_feasibility_enforcer: true
+    use_mpt_optimizer: false
+    use_temporal_mpt_optimizer: false

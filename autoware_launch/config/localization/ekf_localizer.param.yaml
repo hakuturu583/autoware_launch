@@ -13,14 +13,14 @@
       pose_measure_uncertainty_time: 0.01
       pose_smoothing_steps: 5
       max_pose_queue_size: 5 # if multiple measurements arrive within one ekf_dt, this limits must be bigger than smoothing_steps
-      pose_gate_dist: 49.5 # corresponds to significance level = 10^-10
+      pose_gate_dist: 1000.0 # temporarily relaxed to avoid MRM trigger loop while map_origin offset is being calibrated (default 49.5, significance level = 10^-10)
 
     twist_measurement:
       # for twist measurement
       twist_additional_delay: 0.0
       twist_smoothing_steps: 2
       max_twist_queue_size: 2 # if multiple measurements arrive within one ekf_dt, this limits must be bigger than smoothing_steps
-      twist_gate_dist: 46.1 # corresponds to significance level = 10^-10
+      twist_gate_dist: 1000.0 # temporarily relaxed to avoid MRM trigger loop while map_origin offset is being calibrated (default 46.1, significance level = 10^-10)
 
     process_noise:
       # for process model
@@ -45,6 +45,7 @@
       warn_ellipse_size: 1.2
       error_ellipse_size_lateral_direction: 0.3
       warn_ellipse_size_lateral_direction: 0.25
+      diagnostics_publish_frequency: 10.0
 
     misc:
       # for velocity measurement limitation (Set 0.0 if you want to ignore)

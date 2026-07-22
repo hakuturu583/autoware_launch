@@ -5,3 +5,11 @@
     nodes_to_ignore:  # List of nodes to ignore when checking for duplicates
       - /rviz2
       - /simulation/getParameter
+      - /system/aggregator
+      - /system/converter
+      - /traffic_light_camera_info_relay
+      - /traffic_light_image_relay
+      - /trajectory_relay
+      - /cam_front_republish
+      - /robot_state_publisher
+      - /perception/traffic_light_recognition/traffic_light/traffic_light_camera_info_relay

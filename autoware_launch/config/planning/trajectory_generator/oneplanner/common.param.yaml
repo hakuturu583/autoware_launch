@@ -1,0 +1,20 @@
+/**:
+  ros__parameters:
+    # oneplanner mode does not launch the classic external velocity limit pipeline, so this
+    # becomes the hard post-process speed ceiling. Keep the CARLA 0.10 Odaiba validation pass
+    # slow enough that turn tracking can be separated from route/pose errors.
+    max_vel: 4.0            # max velocity limit [m/s] (~14 km/h)
+
+    # constraints param for normal driving
+    normal:
+      min_acc: -1.0         # min deceleration [m/ss]
+      max_acc: 0.8          # max acceleration [m/ss]
+      min_jerk: -1.0        # min jerk [m/sss]
+      max_jerk: 0.8         # max jerk [m/sss]
+
+    # constraints to be observed
+    limit:
+      min_acc: -2.5         # min deceleration limit [m/ss]
+      max_acc: 1.0          # max acceleration limit [m/ss]
+      min_jerk: -1.5        # min jerk limit [m/sss]
+      max_jerk: 1.5         # max jerk limit [m/sss]

@@ -8,9 +8,14 @@
   <arg name="data_path" default="$(env HOME)/autoware_data" description="packages data and artifacts directory path"/>
   <arg name="simulator_type" default="awsim" description="select the simulator type ('awsim' or 'carla')"/>
 
+  <!-- E2E planner -->
+  <arg name="use_e2e_planner" default="false" description="use an end-to-end learned planner (VAD / oneplanner) instead of the classic planning stack"/>
+  <arg name="e2e_planner_mode" default="vad" description="'vad' or 'oneplanner', only used when use_e2e_planner is true"/>
+  <arg name="oneplanner_param_path_override" default=""/>
+
   <!-- launch module preset -->
   <arg name="planning_module_preset" default="default" description="planning module preset"/>
-  <arg name="control_module_preset" default="default" description="control module preset"/>
+  <arg name="control_module_preset" default="$(eval &quot;'e2e' if '$(var use_e2e_planner)' == 'true' else 'default'&quot;)" description="control module preset"/>
 
   <!-- Optional parameters -->
   <!-- Modules to be launched -->
@@ -27,6 +32,37 @@
   <arg name="pointcloud_map_file" default="pointcloud_map.pcd" description="pointcloud map file name"/>
   <!-- Perception -->
   <arg name="traffic_light_namespace" default="[traffic_light]" description="traffic light recognition namespace"/>
+  <!-- CARLA bridge -->
+  <arg name="carla_map" default="" description="CARLA level/map name override. If empty, basename(map_path) is used"/>
+  <arg name="force_load_world" default="False"/>
+  <arg name="host" default="localhost"/>
+  <arg name="port" default="2000"/>
+  <arg name="timeout" default="20"/>
+  <arg name="ego_vehicle_role_name" default="ego_vehicle"/>
+  <arg name="vehicle_type" default="vehicle.toyota.prius"/>
+  <arg name="spawn_point" default="None"/>
+  <arg name="spawn_point_ground_snap" default="False"/>
+  <arg name="spawn_point_ground_offset_z" default="0.5"/>
+  <arg name="sync_mode" default="True"/>
+  <arg name="fixed_delta_seconds" default="0.05"/>
+  <arg name="no_rendering_mode" default="False"/>
+  <arg name="use_traffic_manager" default="False"/>
+  <arg name="max_real_delta_seconds" default="0.05"/>
+  <arg name="min_positive_throttle" default="0.0"/>
+  <arg name="min_positive_throttle_speed_threshold" default="0.8"/>
+  <arg name="normalize_steer_command" default="True"/>
+  <arg name="steer_command_gain" default="1.0"/>
+  <arg name="steering_time_constant" default="0.2"/>
+  <arg name="steer_response_calibration_enable" default="False"/>
+  <arg name="steer_response_calibration_wheel_base" default="2.79"/>
+  <arg name="steer_response_calibration_table" default=""/>
+  <arg name="initial_pose_ground_offset_z" default="1.0"/>
+  <arg name="map_origin_x" default="0.0"/>
+  <arg name="map_origin_y" default="0.0"/>
+  <arg name="carla_state_publish_tf" default="true"/>
+  <arg name="use_light_weight_sensor_mapping" default="False"/>
+  <arg name="sensor_kit_name" default="$(var sensor_model)_description"/>
+  <arg name="sensor_mapping_file" default=""/>
   <!-- Control -->
   <!-- Vehicle -->
   <arg name="launch_vehicle_interface" default="false"/>
@@ -40,8 +76,48 @@
   <arg name="rviz_config_name" default="autoware.rviz" description="rviz config name"/>
   <arg name="rviz_config" default="$(find-pkg-share autoware_launch)/rviz/$(var rviz_config_name)" description="rviz config path"/>
   <group scoped="false" if="$(eval '\'$(var simulator_type)\' == \'carla\'')">
-    <include file="$(find-pkg-share autoware_carla_interface)/autoware_carla_interface.launch.xml"/>
+    <include file="$(find-pkg-share autoware_carla_interface)/autoware_carla_interface.launch.xml">
+      <arg name="use_e2e_planning" value="$(var use_e2e_planner)"/>
+      <arg name="vehicle_model" value="$(var vehicle_model)"/>
+      <arg name="use_sim_time" value="$(var use_sim_time)"/>
+      <arg name="map_path" value="$(var map_path)"/>
+      <arg name="carla_map" value="$(var carla_map)"/>
+      <arg name="force_load_world" value="$(var force_load_world)"/>
+      <arg name="host" value="$(var host)"/>
+      <arg name="port" value="$(var port)"/>
+      <arg name="timeout" value="$(var timeout)"/>
+      <arg name="ego_vehicle_role_name" value="$(var ego_vehicle_role_name)"/>
+      <arg name="vehicle_type" value="$(var vehicle_type)"/>
+      <arg name="spawn_point" value="$(var spawn_point)"/>
+      <arg name="spawn_point_ground_snap" value="$(var spawn_point_ground_snap)"/>
+      <arg name="spawn_point_ground_offset_z" value="$(var spawn_point_ground_offset_z)"/>
+      <arg name="sync_mode" value="$(var sync_mode)"/>
+      <arg name="fixed_delta_seconds" value="$(var fixed_delta_seconds)"/>
+      <arg name="no_rendering_mode" value="$(var no_rendering_mode)"/>
+      <arg name="use_traffic_manager" value="$(var use_traffic_manager)"/>
+      <arg name="max_real_delta_seconds" value="$(var max_real_delta_seconds)"/>
+      <arg name="min_positive_throttle" value="$(var min_positive_throttle)"/>
+      <arg name="min_positive_throttle_speed_threshold" value="$(var min_positive_throttle_speed_threshold)"/>
+      <arg name="normalize_steer_command" value="$(var normalize_steer_command)"/>
+      <arg name="steer_command_gain" value="$(var steer_command_gain)"/>
+      <arg name="steering_time_constant" value="$(var steering_time_constant)"/>
+      <arg name="steer_response_calibration_enable" value="$(var steer_response_calibration_enable)"/>
+      <arg name="steer_response_calibration_wheel_base" value="$(var steer_response_calibration_wheel_base)"/>
+      <arg name="steer_response_calibration_table" value="$(var steer_response_calibration_table)"/>
+      <arg name="initial_pose_ground_offset_z" value="$(var initial_pose_ground_offset_z)"/>
+      <arg name="map_origin_x" value="$(var map_origin_x)"/>
+      <arg name="map_origin_y" value="$(var map_origin_y)"/>
+      <arg name="carla_state_publish_tf" value="$(var carla_state_publish_tf)"/>
+      <arg name="use_light_weight_sensor_mapping" value="$(var use_light_weight_sensor_mapping)"/>
+      <arg name="sensor_kit_name" value="$(var sensor_kit_name)"/>
+      <arg name="sensor_mapping_file" value="$(var sensor_mapping_file)"/>
+    </include>
   </group>
+
+  <!-- E2E mode on CARLA uses a relaxed diagnostics graph (localization/planning are internal to the learned planner). -->
+  <let name="diagnostic_graph_aggregator_graph_path" value="$(find-pkg-share autoware_launch)/config/system/diagnostics/autoware-$(var simulator_type).yaml"/>
+  <let name="diagnostic_graph_aggregator_graph_path" value="$(find-pkg-share autoware_launch)/config/system/diagnostics/autoware-$(var simulator_type)-e2e.yaml"
+       if="$(eval &quot;'$(var use_e2e_planner)' == 'true' and '$(var simulator_type)' == 'carla'&quot;)"/>
 
   <group scoped="false">
     <include file="$(find-pkg-share autoware_launch)/launch/autoware.launch.xml">
@@ -50,6 +126,10 @@
       <arg name="vehicle_model" value="$(var vehicle_model)"/>
       <arg name="sensor_model" value="$(var sensor_model)"/>
       <arg name="data_path" value="$(var data_path)"/>
+      <!-- E2E planner -->
+      <arg name="use_e2e_planner" value="$(var use_e2e_planner)"/>
+      <arg name="e2e_planner_mode" value="$(var e2e_planner_mode)"/>
+      <arg name="oneplanner_param_path_override" value="$(var oneplanner_param_path_override)"/>
       <!-- launch module preset -->
       <arg name="planning_module_preset" value="$(var planning_module_preset)"/>
       <arg name="control_module_preset" value="$(var control_module_preset)"/>
@@ -71,7 +151,7 @@
       <!-- System -->
       <arg name="launch_system_monitor" value="$(var launch_system_monitor)"/>
       <arg name="launch_dummy_diag_publisher" value="$(var launch_dummy_diag_publisher)"/>
-      <arg name="diagnostic_graph_aggregator_graph_path" value="$(find-pkg-share autoware_launch)/config/system/diagnostics/autoware-$(var simulator_type).yaml"/>
+      <arg name="diagnostic_graph_aggregator_graph_path" value="$(var diagnostic_graph_aggregator_graph_path)"/>
       <!-- Sensing -->
       <arg name="launch_sensing_driver" value="$(var launch_sensing_driver)"/>
       <!-- Perception-->

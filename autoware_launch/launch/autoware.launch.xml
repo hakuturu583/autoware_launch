@@ -7,9 +7,14 @@
   <arg name="pointcloud_container_name" default="pointcloud_container"/>
   <arg name="data_path" default="$(env HOME)/autoware_data" description="packages data and artifacts directory path"/>
 
+  <!-- E2E planner -->
+  <arg name="use_e2e_planner" default="false" description="use an end-to-end learned planner (VAD / oneplanner) instead of the classic planning stack"/>
+  <arg name="e2e_planner_mode" default="vad" description="'vad' or 'oneplanner', only used when use_e2e_planner is true"/>
+  <arg name="oneplanner_param_path_override" default=""/>
+
   <!-- launch module preset -->
   <arg name="planning_module_preset" default="default" description="planning module preset"/>
-  <arg name="control_module_preset" default="default" description="control module preset"/>
+  <arg name="control_module_preset" default="$(eval &quot;'e2e' if '$(var use_e2e_planner)' == 'true' else 'default'&quot;)" description="control module preset"/>
 
   <!-- Optional parameters -->
   <!-- Modules to be launched -->
@@ -108,13 +113,29 @@
 
   <!-- Planning -->
   <group if="$(var launch_planning)">
-    <include file="$(find-pkg-share autoware_launch)/launch/components/tier4_planning_component.launch.xml">
-      <arg name="module_preset" value="$(var planning_module_preset)"/>
-      <arg name="enable_all_modules_auto_mode" value="$(var enable_all_modules_auto_mode)"/>
-      <arg name="is_simulation" value="$(var is_simulation)"/>
-      <arg name="use_sim_time" value="$(var use_sim_time)"/>
-      <arg name="vehicle_model" value="$(var vehicle_model)"/>
-    </include>
+    <group unless="$(var use_e2e_planner)">
+      <include file="$(find-pkg-share autoware_launch)/launch/components/tier4_planning_component.launch.xml">
+        <arg name="module_preset" value="$(var planning_module_preset)"/>
+        <arg name="enable_all_modules_auto_mode" value="$(var enable_all_modules_auto_mode)"/>
+        <arg name="is_simulation" value="$(var is_simulation)"/>
+        <arg name="use_sim_time" value="$(var use_sim_time)"/>
+        <arg name="vehicle_model" value="$(var vehicle_model)"/>
+      </include>
+    </group>
+
+    <!-- E2E planner (VAD / oneplanner); also launches its own control stack -->
+    <group if="$(var use_e2e_planner)">
+      <include file="$(find-pkg-share autoware_launch)/launch/components/e2e_planning_component.launch.xml">
+        <arg name="e2e_planner_mode" value="$(var e2e_planner_mode)"/>
+        <arg name="oneplanner_param_path_override" value="$(var oneplanner_param_path_override)"/>
+        <arg name="use_sim_time" value="$(var use_sim_time)"/>
+        <arg name="vehicle_model" value="$(var vehicle_model)"/>
+        <arg name="sensor_model" value="$(var sensor_model)"/>
+        <arg name="data_path" value="$(var data_path)"/>
+        <arg name="launch_control" value="$(var launch_control)"/>
+        <arg name="control_module_preset" value="$(var control_module_preset)"/>
+      </include>
+    </group>
 
     <!-- Relay node for trajectory topic -->
     <!-- This is a temporary addition for migration purposes. -->
@@ -125,8 +146,8 @@
     </node>
   </group>
 
-  <!-- Control -->
-  <group if="$(var launch_control)">
+  <!-- Control (the E2E planner above launches its own control stack, so skip it here) -->
+  <group if="$(eval &quot;'$(var launch_control)' == 'true' and '$(var use_e2e_planner)' == 'false'&quot;)">
     <include file="$(find-pkg-share autoware_launch)/launch/components/tier4_control_component.launch.xml">
       <arg name="module_preset" value="$(var control_module_preset)"/>
       <arg name="use_sim_time" value="$(var use_sim_time)"/>
