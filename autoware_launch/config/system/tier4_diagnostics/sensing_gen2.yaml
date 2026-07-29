@@ -231,80 +231,95 @@ units:
     node: /sensing/lidar/side_left/hesai_ros_wrapper_node
     name: hesai_status
     timeout: 5.0
+    hysteresis: 3.0
   - path: /sensing/lidar/side_left/ptp
     type: diag
     node: /sensing/lidar/side_left/hesai_ros_wrapper_node
     name: hesai_ptp
     timeout: 5.0
+    hysteresis: 3.0
   - path: /sensing/lidar/side_left/temperature
     type: diag
     node: /sensing/lidar/side_left/hesai_ros_wrapper_node
     name: hesai_temperature
     timeout: 5.0
+    hysteresis: 3.0
 
   - path: /sensing/lidar/side_right/connection
     type: diag
     node: /sensing/lidar/side_right/hesai_ros_wrapper_node
     name: hesai_status
     timeout: 5.0
+    hysteresis: 3.0
   - path: /sensing/lidar/side_right/ptp
     type: diag
     node: /sensing/lidar/side_right/hesai_ros_wrapper_node
     name: hesai_ptp
     timeout: 5.0
+    hysteresis: 3.0
   - path: /sensing/lidar/side_right/temperature
     type: diag
     node: /sensing/lidar/side_right/hesai_ros_wrapper_node
     name: hesai_temperature
     timeout: 5.0
+    hysteresis: 3.0
 
   - path: /sensing/lidar/front_left/connection
     type: diag
     node: /sensing/lidar/front_left/hesai_ros_wrapper_node
     name: hesai_status
     timeout: 5.0
+    hysteresis: 3.0
   - path: /sensing/lidar/front_left/ptp
     type: diag
     node: /sensing/lidar/front_left/hesai_ros_wrapper_node
     name: hesai_ptp
     timeout: 5.0
+    hysteresis: 3.0
   - path: /sensing/lidar/front_left/temperature
     type: diag
     node: /sensing/lidar/front_left/hesai_ros_wrapper_node
     name: hesai_temperature
     timeout: 5.0
+    hysteresis: 3.0
 
   - path: /sensing/lidar/front_right/connection
     type: diag
     node: /sensing/lidar/front_right/hesai_ros_wrapper_node
     name: hesai_status
     timeout: 5.0
+    hysteresis: 3.0
   - path: /sensing/lidar/front_right/ptp
     type: diag
     node: /sensing/lidar/front_right/hesai_ros_wrapper_node
     name: hesai_ptp
     timeout: 5.0
+    hysteresis: 3.0
   - path: /sensing/lidar/front_right/temperature
     type: diag
     node: /sensing/lidar/front_right/hesai_ros_wrapper_node
     name: hesai_temperature
     timeout: 5.0
+    hysteresis: 3.0
 
   - path: /sensing/lidar/top/connection
     type: diag
     node: /sensing/lidar/top/hesai_ros_wrapper_node
     name: hesai_status
     timeout: 5.0
+    hysteresis: 3.0
   - path: /sensing/lidar/top/ptp
     type: diag
     node: /sensing/lidar/top/hesai_ros_wrapper_node
     name: hesai_ptp
     timeout: 5.0
+    hysteresis: 3.0
   - path: /sensing/lidar/top/temperature
     type: diag
     node: /sensing/lidar/top/hesai_ros_wrapper_node
     name: hesai_temperature
     timeout: 5.0
+    hysteresis: 3.0
 
   # - path: /sensing/lidar/rear/connection
   #   type: diag
