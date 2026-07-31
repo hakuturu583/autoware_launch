@@ -10,9 +10,9 @@
         goal_dist_m: 1.0
 
       th_cutoff_time_s:
-        predicted_path: 3.5
-        near_boundary: 3.5
-        departure: 2.0
+        predicted_path: 2.0
+        near_boundary: 2.0
+        departure: 1.5
 
       on_time_buffer_s:
         near_boundary: 0.15
@@ -37,7 +37,7 @@
         longitudinal:
           enable: true
           lon_tracking:
-            scale: 1.0
+            scale: 0.3
             extra_margin_m: 0.0
 
         steering_accelerated:
@@ -83,14 +83,14 @@
 
       slow_down_behavior:
         enable:
-          slow_down_near_boundary: false
-          slow_down_before_departure: false
-          stop_before_departure: false
+          slow_down_near_boundary: true
+          slow_down_before_departure: true
+          stop_before_departure: true
 
         th_trigger:
           th_vel_kmph:
             min: 5.0
-            max: 30.0
+            max: 35.0
           th_acc_mps2:
             min: -1.0
             max: -2.5
@@ -102,7 +102,7 @@
           th_dist_to_boundary_m:
             left:
               min: 0.01
-              max: 0.5
+              max: 0.3
             right:
               min: 0.01
-              max: 0.5
+              max: 0.3
