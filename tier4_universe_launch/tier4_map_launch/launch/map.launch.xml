@@ -31,12 +31,6 @@
         <remap from="service/get_selected_pcd_map" to="/map/get_selected_pointcloud_map"/>
       </composable_node>
 
-      <composable_node pkg="autoware_map_loader" plugin="autoware::map_loader::Lanelet2MapLoaderNode" name="lanelet2_map_loader">
-        <param from="$(var lanelet2_map_loader_param_path)"/>
-        <param name="lanelet2_map_path" value="$(var lanelet2_map_path)"/>
-        <remap from="output/lanelet2_map" to="vector_map"/>
-      </composable_node>
-
       <composable_node pkg="autoware_lanelet2_map_visualizer" plugin="autoware::lanelet2_map_visualizer::Lanelet2MapVisualizationNode" name="lanelet2_map_visualization">
         <remap from="input/lanelet2_map" to="vector_map"/>
         <remap from="output/lanelet2_map_marker" to="vector_map_marker"/>
@@ -46,6 +40,19 @@
         <param from="$(var map_tf_generator_param_path)"/>
       </composable_node>
     </node_container>
+
+    <!-- Lanelet2MapLoaderNode runs as a dedicated process: loading it as a
+         composable node deadlocks the whole map_container on ROS 2 Jazzy
+         (dlopen of the lanelet2 library collides with the lttng-ust
+         registration lock), which leaves /map/vector_map unpublished and
+         wedges every later component load into the container. -->
+    <node pkg="autoware_map_loader" exec="autoware_lanelet2_map_loader" name="lanelet2_map_loader" output="both">
+      <param from="$(var lanelet2_map_loader_param_path)"/>
+      <param name="lanelet2_map_path" value="$(var lanelet2_map_path)"/>
+      <param name="enable_selected_map_loading" value="false"/>
+      <param name="lanelet2_map_metadata_path" value="none"/>
+      <remap from="output/lanelet2_map" to="vector_map"/>
+    </node>
 
     <node pkg="autoware_map_loader" exec="map_hash_generator" name="map_hash_generator">
       <param name="lanelet2_map_path" value="$(var lanelet2_map_path)"/>
