@@ -63,6 +63,19 @@
   <arg name="use_light_weight_sensor_mapping" default="False"/>
   <arg name="sensor_kit_name" default="$(var sensor_model)_description"/>
   <arg name="sensor_mapping_file" default=""/>
+  <!-- SplatSim (3D Gaussian Splatting) rendering -->
+  <arg name="render_with_splatsim" default="false" description="Render sensors with SplatSim (3DGS) via Docker + gRPC instead of CARLA rendering"/>
+  <arg name="splatsim_render_camera" default="false" description="Render cameras via SplatSim"/>
+  <arg name="splatsim_render_lidar" default="true" description="Render LiDAR via SplatSim"/>
+  <arg name="splatsim_tileset_path" default="" description="Host path to the 3DGS scene (.usdz); required when render_with_splatsim:=true"/>
+  <arg name="splatsim_image" default="splatsim:latest" description="Docker image for SplatSim (local image by default; registry-qualified images are pulled only when missing locally)"/>
+  <arg name="splatsim_grpc_port" default="50051"/>
+  <arg name="splatsim_lidar_grpc_port" default="50061"/>
+  <arg name="splatsim_use_sh" default="true"/>
+  <arg name="splatsim_enable_lod" default="true"/>
+  <arg name="splatsim_device" default="cuda:0"/>
+  <arg name="splatsim_restart_container" default="false"/>
+  <arg name="splatsim_compress_format" default="jpeg"/>
   <!-- Control -->
   <!-- Vehicle -->
   <arg name="launch_vehicle_interface" default="false"/>
@@ -76,7 +89,7 @@
   <arg name="rviz_config_name" default="autoware.rviz" description="rviz config name"/>
   <arg name="rviz_config" default="$(find-pkg-share autoware_launch)/rviz/$(var rviz_config_name)" description="rviz config path"/>
   <group scoped="false" if="$(eval '\'$(var simulator_type)\' == \'carla\'')">
-    <include file="$(find-pkg-share autoware_carla_interface)/autoware_carla_interface.launch.xml">
+    <include file="$(find-pkg-share autoware_carla_interface)/launch/autoware_carla_interface.launch.xml">
       <arg name="use_e2e_planning" value="$(var use_e2e_planner)"/>
       <arg name="vehicle_model" value="$(var vehicle_model)"/>
       <arg name="use_sim_time" value="$(var use_sim_time)"/>
@@ -111,6 +124,18 @@
       <arg name="use_light_weight_sensor_mapping" value="$(var use_light_weight_sensor_mapping)"/>
       <arg name="sensor_kit_name" value="$(var sensor_kit_name)"/>
       <arg name="sensor_mapping_file" value="$(var sensor_mapping_file)"/>
+      <arg name="render_with_splatsim" value="$(var render_with_splatsim)"/>
+      <arg name="splatsim_render_camera" value="$(var splatsim_render_camera)"/>
+      <arg name="splatsim_render_lidar" value="$(var splatsim_render_lidar)"/>
+      <arg name="splatsim_tileset_path" value="$(var splatsim_tileset_path)"/>
+      <arg name="splatsim_image" value="$(var splatsim_image)"/>
+      <arg name="splatsim_grpc_port" value="$(var splatsim_grpc_port)"/>
+      <arg name="splatsim_lidar_grpc_port" value="$(var splatsim_lidar_grpc_port)"/>
+      <arg name="splatsim_use_sh" value="$(var splatsim_use_sh)"/>
+      <arg name="splatsim_enable_lod" value="$(var splatsim_enable_lod)"/>
+      <arg name="splatsim_device" value="$(var splatsim_device)"/>
+      <arg name="splatsim_restart_container" value="$(var splatsim_restart_container)"/>
+      <arg name="splatsim_compress_format" value="$(var splatsim_compress_format)"/>
     </include>
   </group>
 
