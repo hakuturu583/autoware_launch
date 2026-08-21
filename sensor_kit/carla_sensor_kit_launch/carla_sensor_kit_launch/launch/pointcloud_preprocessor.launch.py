@@ -102,7 +102,11 @@ def launch_setup(context, *args, **kwargs):
     cropbox_parameters["min_z"] = mirror_info["min_height_offset"]
     cropbox_parameters["max_z"] = mirror_info["max_height_offset"]
 
-    # Crop box filter for mirrors
+    # Crop box filter for mirrors. The output is remapped straight onto the
+    # concatenated topic: with a single LiDAR there is nothing to concatenate,
+    # and the topic_tools RelayNode previously used for this rename blocks in
+    # its constructor on ROS 2 Jazzy while resolving the (not yet published)
+    # input topic type, wedging the whole pointcloud_container load sequence.
     nodes.append(
         ComposableNode(
             package="autoware_pointcloud_preprocessor",
@@ -110,26 +114,9 @@ def launch_setup(context, *args, **kwargs):
             name="crop_box_filter_mirror",
             remappings=[
                 ("input", "self_cropped/pointcloud"),
-                ("output", "mirror_cropped/pointcloud"),
+                ("output", "/sensing/lidar/concatenated/pointcloud"),
             ],
             parameters=[cropbox_parameters],
-            extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
-        )
-    )
-
-    # Relay filtered pointcloud to concatenated/pointcloud
-    nodes.append(
-        ComposableNode(
-            package="topic_tools",
-            plugin="topic_tools::RelayNode",
-            name="pointcloud_relay",
-            parameters=[
-                {
-                    "input_topic": "mirror_cropped/pointcloud",
-                    "output_topic": "/sensing/lidar/concatenated/pointcloud",
-                    "type": "sensor_msgs/msg/PointCloud2",
-                }
-            ],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
         )
     )
