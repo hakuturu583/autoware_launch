@@ -19,6 +19,10 @@
   <arg name="sensing" default="true" description="launch sensing"/>
   <arg name="localization" default="true" description="launch localization"/>
   <arg name="perception" default="true" description="launch perception"/>
+  <!-- Skip perception's detection stage when something else publishes its output
+       topic, such as an end-to-end planner whose graph carries a detection head.
+       Tracking and prediction still run, on those detections. -->
+  <arg name="launch_detection" default="auto" description="true / false / auto (off for e2e_planner)"/>
   <arg name="planning" default="true" description="launch planning"/>
   <arg name="control" default="true" description="launch control"/>
   <!-- Pointcloud container -->
@@ -70,6 +74,7 @@
       <arg name="launch_sensing" value="$(var sensing)"/>
       <arg name="launch_localization" value="$(var localization)"/>
       <arg name="launch_perception" value="$(var perception)"/>
+      <arg name="launch_detection" value="$(var launch_detection)"/>
       <arg name="launch_planning" value="$(var planning)"/>
       <arg name="launch_control" value="$(var control)"/>
       <!-- Global parameters -->
