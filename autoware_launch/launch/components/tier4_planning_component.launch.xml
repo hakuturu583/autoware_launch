@@ -9,7 +9,7 @@
   <arg name="is_simulation" default="false"/>
   <arg name="use_sim_time" default="false"/>
   <arg name="vehicle_model" default="sample_vehicle"/>
-  <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / rule_based"/>
+  <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / e2e_planner / rule_based"/>
   <arg name="data_path" default="/opt/autoware/mlmodels" description="packages data and artifacts directory path"/>
   <arg name="scene_module_manager_param_path"/>
 
@@ -144,6 +144,12 @@
 
     <!-- trajectory generator params -->
     <arg name="diffusion_planner_param_path" value="$(var neural_net_planner_config_path)/diffusion_planner.param.yaml"/>
+    <!-- The end-to-end planner's deployment config stays in the package that
+         reads it: it is model-agnostic host behaviour, and the network's own
+         description travels separately with the artifacts as
+         ml_package_<model>.param.yaml. Copying it here would give the same
+         settings two sources that drift apart. -->
+    <arg name="e2e_planner_param_path" value="$(find-pkg-share autoware_tensorrt_e2e)/config/e2e_planner.param.yaml"/>
     <arg name="trajectory_modifier_param_path" value="$(var neural_net_planner_config_path)/trajectory_modifier.param.yaml"/>
     <arg name="trajectory_optimizer_param_path" value="$(var neural_net_planner_config_path)/trajectory_optimizer.param.yaml"/>
     <arg name="jerk_filtered_smoother_param_path" value="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/autoware_velocity_smoother/JerkFiltered.param.yaml"/>

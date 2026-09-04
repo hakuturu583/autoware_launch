@@ -119,6 +119,7 @@
   <arg name="use_pointcloud_map" default="true" description="use pointcloud map in detection"/>
   <arg name="use_low_height_cropbox" default="true" description="use low height crop filter in the euclidean clustering"/>
   <arg name="use_object_filter" default="true" description="use object filter"/>
+  <arg name="launch_detection" default="true" description="launch the object detection stage; false when another node publishes its output topic"/>
   <arg name="objects_filter_method" default="lanelet_filter" description="options: `lanelet_filter` or `position_filter`"/>
   <arg name="use_irregular_object_detector" default="true" description="enable pipeline for small unknown object detection"/>
   <arg name="use_low_intensity_cluster_filter" default="true" description="use low_intensity_cluster_filter in clustering"/>
@@ -267,7 +268,11 @@
     <group unless="$(var use_empty_dynamic_object_publisher)">
       <push-ros-namespace namespace="object_recognition"/>
       <!-- Detection module -->
-      <group>
+      <!-- An end-to-end planner whose own graph carries a detection head has
+           nothing for this stage to do and serves its output topic itself, so
+           it is skipped rather than run and discarded. Tracking and everything
+           downstream are untouched. -->
+      <group if="$(var launch_detection)">
         <push-ros-namespace namespace="detection"/>
         <include file="$(find-pkg-share tier4_perception_launch)/launch/object_recognition/detection/detection.launch.xml">
           <arg name="mode" value="$(var mode)"/>

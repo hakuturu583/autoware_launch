@@ -55,6 +55,7 @@
   <arg name="detected_objects_validation_method" default="obstacle_pointcloud" description="options: obstacle_pointcloud, occupancy_grid (must be used with laserscan_based_occupancy_grid_map)"/>
   <arg name="data_path" default="$(env HOME)/autoware_data" description="packages data and artifacts directory path"/>
   <arg name="lidar_detection_model" default="bevfusion/bevfusion_lidar" description="If the model name is not declared, the default model in perception.launch.xml will be used"/>
+  <arg name="launch_detection" default="true" description="launch the object detection stage"/>
   <arg name="ml_camera_lidar_merger_priority_mode" default="0" description="priority mode for ml and camera_lidar merger, options: `0: Object0`, `1: Object1`, `2: ConfidenceBased`, `3: ClassBased`"/>
   <arg name="input_pointcloud_for_traffic_light_occlusion_predictor" default="/sensing/lidar/top/pointcloud_raw_ex" description="input pointcloud topic for traffic_light_occlusion_predictor"/>
 
@@ -150,6 +151,7 @@
   </group>
 
   <include file="$(find-pkg-share tier4_perception_launch)/launch/perception.launch.xml">
+    <arg name="launch_detection" value="$(var launch_detection)"/>
     <arg name="data_path" value="$(var data_path)"/>
     <!-- general options to switch launch function/module -->
     <arg name="mode" value="$(var perception_mode)"/>
