@@ -10,6 +10,7 @@
   <arg name="use_sim_time" default="false"/>
   <arg name="vehicle_model" default="sample_vehicle"/>
   <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / e2e_planner / rule_based"/>
+  <arg name="e2e_planner_model_name" default="resworld" description="which model the end-to-end planner runs"/>
   <arg name="data_path" default="/opt/autoware/mlmodels" description="packages data and artifacts directory path"/>
   <arg name="scene_module_manager_param_path"/>
 
@@ -149,6 +150,7 @@
          description is not here: it ships with the model artifacts as
          ml_package_<model>.param.yaml. -->
     <arg name="e2e_planner_param_path" value="$(var neural_net_planner_config_path)/e2e_planner.param.yaml"/>
+    <arg name="e2e_planner_model_name" value="$(var e2e_planner_model_name)"/>
     <arg name="trajectory_modifier_param_path" value="$(var neural_net_planner_config_path)/trajectory_modifier.param.yaml"/>
     <arg name="trajectory_optimizer_param_path" value="$(var neural_net_planner_config_path)/trajectory_optimizer.param.yaml"/>
     <arg name="jerk_filtered_smoother_param_path" value="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/autoware_velocity_smoother/JerkFiltered.param.yaml"/>

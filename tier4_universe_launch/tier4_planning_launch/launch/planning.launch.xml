@@ -83,6 +83,7 @@
         <arg name="input_pointcloud_topic_name" value="$(var input_pointcloud_topic_name)"/>
         <arg name="data_path" value="$(var data_path)"/>
         <arg name="e2e_planner_param_path" value="$(var e2e_planner_param_path)"/>
+        <arg name="e2e_planner_model_name" value="$(var e2e_planner_model_name)"/>
         <arg name="trajectory_modifier_param_path" value="$(var trajectory_modifier_param_path)"/>
         <arg name="trajectory_optimizer_param_path" value="$(var trajectory_optimizer_param_path)"/>
         <arg name="jerk_filtered_smoother_param_path" value="$(var jerk_filtered_smoother_param_path)"/>
