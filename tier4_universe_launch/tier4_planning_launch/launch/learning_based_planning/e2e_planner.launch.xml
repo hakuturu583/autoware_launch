@@ -11,9 +11,12 @@
   -->
   <arg name="data_path"/>
   <arg name="e2e_planner_param_path"/>
-  <!-- Which model this stack runs. The package ships one launch per model
-       family; the file is an argument so choosing a model is not a code change
-       here. -->
+  <!-- Which model this stack runs. autoware_tensorrt_e2e ships one launch per
+       model, each naming that model's artifacts and the inputs it consumes, so
+       choosing a model here is choosing a file rather than editing this one.
+       The arguments passed below are the ones every model's launch declares;
+       anything a particular model needs beyond them belongs in its own launch,
+       not here. -->
   <arg
     name="e2e_planner_launch_file"
     default="$(find-pkg-share autoware_tensorrt_e2e)/launch/e2e_planner_resworld.launch.xml"
