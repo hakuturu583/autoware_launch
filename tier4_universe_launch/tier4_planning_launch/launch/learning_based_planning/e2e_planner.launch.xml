@@ -2,6 +2,11 @@
   <!-- planning module -->
   <!-- end-to-end planner (autoware_tensorrt_e2e) -->
   <!--
+    This launch runs one model, ResWorld, the way autoware_tensorrt_e2e ships one
+    launch per model: what a model consumes, what its artifacts are called and
+    what it publishes are that model's business, so another model gets its own
+    pair of launches rather than an argument here.
+
     Wired like diffusion_planner.launch.xml beside it: the network produces
     candidate trajectories, the modifier and the optimizer turn them into one
     trajectory, and the validator publishes it. The difference is upstream:
@@ -11,18 +16,6 @@
   -->
   <arg name="data_path"/>
   <arg name="e2e_planner_param_path"/>
-  <!-- Which model this stack runs. autoware_tensorrt_e2e ships one launch per
-       model, each naming that model's artifacts and the inputs it consumes, so
-       choosing a model here is choosing a file rather than editing this one.
-       The arguments passed below are the ones every model's launch declares;
-       anything a particular model needs beyond them belongs in its own launch,
-       not here. -->
-  <arg
-    name="e2e_planner_launch_file"
-    default="$(find-pkg-share autoware_tensorrt_e2e)/launch/e2e_planner_resworld.launch.xml"
-    description="the autoware_tensorrt_e2e launch for the model being run"
-  />
-
   <arg name="input_objects_topic_name"/>
   <arg name="input_pointcloud_topic_name"/>
 
@@ -54,7 +47,7 @@
     <!-- neural network based planning module -->
     <group>
       <push-ros-namespace namespace="neural_network_based_planner"/>
-      <include file="$(var e2e_planner_launch_file)">
+      <include file="$(find-pkg-share autoware_tensorrt_e2e)/launch/e2e_planner_resworld.launch.xml">
         <arg name="data_path" value="$(var data_path)"/>
         <arg name="model_param_path" value="$(var e2e_planner_param_path)"/>
         <arg name="input_pointcloud" value="/sensing/lidar/concatenated/pointcloud"/>
