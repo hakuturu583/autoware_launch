@@ -144,9 +144,13 @@
         value="/planning/trajectory_generator/neural_network_based_planner/diffusion_planner_node/output/predicted_objects"
         if="$(eval &quot;'$(var planning_setting)'=='diffusion_planner'&quot;)"
       />
+      <!-- The end-to-end planner predicts no objects: its graph has no neighbour
+           tensor, so there is nothing to attach predicted paths to and the
+           output does not exist. Perception's, built from this planner's own
+           detections, is what there is to score against. -->
       <let
         name="evaluator_input_objects"
-        value="/planning/trajectory_generator/neural_network_based_planner/tensorrt_e2e/output/predicted_objects"
+        value="/perception/object_recognition/objects"
         if="$(eval &quot;'$(var planning_setting)'=='e2e_planner'&quot;)"
       />
       <let name="evaluator_input_objects" value="/perception/object_recognition/objects" if="$(eval &quot;'$(var planning_setting)'=='rule_based'&quot;)"/>

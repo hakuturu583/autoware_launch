@@ -55,7 +55,6 @@
         <arg name="input_acceleration" value="/localization/acceleration"/>
         <arg name="input_route" value="/planning/mission_planning/route"/>
         <arg name="input_traffic_signals" value="/perception/traffic_light_recognition/traffic_signals"/>
-        <arg name="input_tracked_objects" value="/perception/object_recognition/tracking/objects"/>
         <arg name="input_vector_map" value="/map/vector_map"/>
         <arg name="input_turn_indicators" value="/vehicle/status/turn_indicators_status"/>
         <arg name="output_trajectories" value="/planning/generator/e2e_planner/candidate_trajectories"/>
