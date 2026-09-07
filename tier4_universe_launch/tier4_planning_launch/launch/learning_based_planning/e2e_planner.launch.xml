@@ -18,6 +18,19 @@
   <arg name="e2e_planner_param_path"/>
   <arg name="input_objects_topic_name"/>
   <arg name="input_pointcloud_topic_name"/>
+  <!--
+    Where this model's detection head stands in for perception's detection stage.
+    It has to be the tracker's own input channel for the LiDAR DNN, not the
+    aggregate /perception/object_recognition/detection/objects: this deployment
+    runs the multi-channel tracker merger (use_multi_channel_tracker_merger
+    defaults to true in tier4_perception_component.launch.xml), and that merger
+    subscribes per detector (detection01 is
+    /perception/object_recognition/detection/$(var lidar_detection_model_type)/objects)
+    and never reads the aggregate. Publishing on the aggregate draws boxes in
+    RViz and feeds the tracker nothing, which reads as working perception with no
+    tracking output. The head is BEVFusion's, so it goes on BEVFusion's channel.
+  -->
+  <arg name="output_detected_objects_topic_name" default="/perception/object_recognition/detection/bevfusion/objects"/>
 
   <!-- trajectory modifier -->
   <arg name="trajectory_modifier_param_path"/>
@@ -60,9 +73,9 @@
         <arg name="output_trajectories" value="/planning/generator/e2e_planner/candidate_trajectories"/>
         <!-- The frozen detection head on the extractor graph stands in for
              perception's detection stage, which is why that stage is not
-             launched alongside this planner. Downstream (tracking, the
-             evaluator, RViz) reads this topic exactly as before. -->
-        <arg name="output_detected_objects" value="/perception/object_recognition/detection/objects"/>
+             launched alongside this planner. See the argument's comment for why
+             it is the per-detector channel and not the aggregate topic. -->
+        <arg name="output_detected_objects" value="$(var output_detected_objects_topic_name)"/>
       </include>
       <include file="$(find-pkg-share autoware_trajectory_modifier)/launch/trajectory_modifier.launch.xml">
         <arg name="trajectory_modifier_param_path" value="$(var trajectory_modifier_param_path)"/>
