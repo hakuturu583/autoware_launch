@@ -276,8 +276,9 @@ units:
 
   - path: /planning/020-boundary_departure
     type: diag
-    node: motion_velocity_planner
+    node: planning_validator
     name: boundary_departure
+    timeout: 1.0
 
   - path: /planning/021-incoming_message_timeout
     type: diag

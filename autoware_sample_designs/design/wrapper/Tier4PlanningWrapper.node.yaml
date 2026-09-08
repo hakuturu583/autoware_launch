@@ -260,6 +260,8 @@ param_values:
     default: $(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/planning_validator/intersection_collision_checker.param.yaml
   - name: planning_validator_rear_collision_checker_param_path
     default: $(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/planning_validator/rear_collision_checker.param.yaml
+  - name: planning_validator_boundary_departure_checker_param_path
+    default: $(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/planning_validator/boundary_departure_checker.param.yaml
   - name: common_param_path
     default: $(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/common.param.yaml
   - name: nearest_search_param_path
