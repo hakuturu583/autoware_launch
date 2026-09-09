@@ -2135,6 +2135,34 @@ Visualization Manager:
                 Value: /planning/planning_factors/neural_network_planner
               Value: true
               show_safety_factors: false
+            - Class: tier4_planning_factor_rviz_plugin/PlanningFactorRvizPlugin
+              Enabled: true
+              Name: PlanningFactor(ModifierObstacleStop)
+              Namespaces:
+                {}
+              Show Safety Factors: false
+              Topic:
+                Depth: 5
+                Durability Policy: Volatile
+                History Policy: Keep Last
+                Reliability Policy: Reliable
+                Value: /planning/planning_factors/modifier_obstacle_stop
+              Value: true
+              show_safety_factors: false
+            - Class: tier4_planning_factor_rviz_plugin/PlanningFactorRvizPlugin
+              Enabled: true
+              Name: PlanningFactor(ModifierTrafficLight)
+              Namespaces:
+                {}
+              Show Safety Factors: false
+              Topic:
+                Depth: 5
+                Durability Policy: Volatile
+                History Policy: Keep Last
+                Reliability Policy: Reliable
+                Value: /planning/planning_factors/modifier_traffic_light_stop
+              Value: true
+              show_safety_factors: false
             - BUS:
                 Alpha: 0.9990000128746033
                 Color: 30; 144; 255

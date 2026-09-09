@@ -17,8 +17,11 @@
     delay_step: 0
     line_string_max_step_m: 5.0
     use_time_interpolation: false
+    # Stop/slowdown labeling lives in trajectory_modifier ModelPlanningFactorID
+    # (remapped to /planning/planning_factors/neural_network_planner) so it
+    # applies to any learning-based planner, not only diffusion_planner.
     planning_factor:
-      enable_stop: true
+      enable_stop: false
       enable_slowdown: false
       stop_keep_duration_threshold: 1.0  # [s]
       stop_velocity_threshold: 0.1       # [m/s]
