@@ -176,6 +176,7 @@
       <arg name="vehicle_model" value="$(var vehicle_model)"/>
       <arg name="planning_setting" value="$(var planning_setting)"/>
       <arg name="data_path" value="$(var data_path)"/>
+      <arg name="pointcloud_container_name" value="$(var pointcloud_container_name)"/>
     </include>
   </group>
 

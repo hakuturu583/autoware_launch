@@ -17,6 +17,21 @@
   <arg name="input_pointcloud_topic_name"/>
   <arg name="resworld_input_pointcloud" default="/sensing/lidar/concatenated/pointcloud"/>
   <!--
+    The planner node is composed into the container that produces its cloud, not
+    run as a process of its own. The CUDA concatenator hands the concatenated
+    cloud over through cuda_blackboard: the GPU buffer stays in a per-process
+    singleton and only an instance id is published on <topic>/cuda. That works
+    only inside the same process. A standalone planner sees the /cuda publisher,
+    drops its plain-topic subscription as designed, and then receives no clouds at
+    all while the CUDA concatenator runs. So the node lives in the container that
+    produces the clouds; this is the only configuration, there is no standalone
+    switch. The enclosing push-ros-namespace still applies to the loaded
+    component (launch_ros prefixes it onto the composable node's namespace), so
+    the node keeps its name
+    /planning/trajectory_generator/neural_network_based_planner/tensorrt_e2e.
+  -->
+  <arg name="pointcloud_container_name" default="/pointcloud_container" description="container the planner node is composed into"/>
+  <!--
     Where this model's detection head stands in for perception's detection stage.
     It has to be the tracker's own input channel for the LiDAR DNN, not the
     aggregate /perception/object_recognition/detection/objects: this deployment
@@ -66,6 +81,7 @@
              autoware_bevfusion convention); the model launch appends /resworld. -->
         <arg name="data_path" value="$(var data_path)/ml_models/tensorrt_e2e"/>
         <arg name="model_param_path" value="$(var e2e_planner_param_path)"/>
+        <arg name="target_container" value="$(var pointcloud_container_name)"/>
         <arg name="input_pointcloud" value="$(var resworld_input_pointcloud)"/>
         <arg name="input_odometry" value="/localization/kinematic_state"/>
         <arg name="input_acceleration" value="/localization/acceleration"/>

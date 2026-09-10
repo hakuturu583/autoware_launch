@@ -12,6 +12,8 @@
   <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / e2e_planner / resworld / rule_based"/>
   <arg name="data_path" default="/opt/autoware/mlmodels" description="packages data and artifacts directory path"/>
   <arg name="scene_module_manager_param_path"/>
+  <!-- The container sensing's CUDA concatenator runs in; the ResWorld planner is composed into it (see resworld.launch.xml). -->
+  <arg name="pointcloud_container_name" default="/pointcloud_container" description="container the ResWorld planner node is composed into"/>
 
   <!-- Input topic parameters for planning modules -->
   <arg name="planning_input_objects_topic_name" default="/perception/object_recognition/objects"/>
