@@ -1,36 +1,34 @@
 <launch>
   <!-- planning module -->
-  <!-- end-to-end planner (autoware_tensorrt_e2e) -->
+  <!-- end-to-end planner (autoware_tensorrt_e2e): the generic skeleton -->
   <!--
-    This launch runs one model, ResWorld, the way autoware_tensorrt_e2e ships one
-    launch per model: what a model consumes, what its artifacts are called and
-    what it publishes are that model's business, so another model gets its own
-    pair of launches rather than an argument here.
+    This is the model-agnostic chain for a planner served by
+    autoware_tensorrt_e2e: the network produces candidate trajectories, the
+    modifier and the optimizer turn them into one trajectory, and the validator
+    publishes it. It is wired like diffusion_planner.launch.xml beside it, on
+    its own topic family /planning/generator/e2e_planner/....
 
-    Wired like diffusion_planner.launch.xml beside it: the network produces
-    candidate trajectories, the modifier and the optimizer turn them into one
-    trajectory, and the validator publishes it. The difference is upstream:
-    this planner consumes the concatenated LiDAR cloud directly and carries a
-    detection head on its own graph, so perception's detection stage has nothing
-    left to do and its output topic is served from here instead.
+    Which network runs is the one thing left open. autoware_tensorrt_e2e ships
+    one launch per model, because what a model consumes, what its artifacts are
+    called and what it publishes are that model's business. The include below
+    is chosen by e2e_model_launch and defaults to the package's generic LiDAR
+    example. A model that is actually deployed does not go through this
+    argument: it gets its own planning_setting and its own launch next to this
+    one, on its own branch (latentdrive.launch.xml, resworld.launch.xml), the
+    way this file itself sits next to diffusion_planner.launch.xml.
   -->
   <arg name="data_path"/>
+  <!-- This vehicle's deployment config for autoware_tensorrt_e2e models
+       (autoware_launch neural_net_planner/e2e_planner.param.yaml). It is written
+       against the variables a deployed model's launch declares (model_path,
+       planner_onnx, extractor_onnx), so it pairs with that model's own launch
+       (resworld.launch.xml), not with the generic example below, whose param
+       file substitutes only data_path. -->
   <arg name="e2e_planner_param_path"/>
+  <arg name="e2e_model_launch" default="$(find-pkg-share autoware_tensorrt_e2e)/launch/e2e_planner_lidar.launch.xml" description="autoware_tensorrt_e2e model launch to run behind the modifier/optimizer chain"/>
+  <arg name="e2e_model_param_path" default="$(find-pkg-share autoware_tensorrt_e2e)/config/e2e_planner_lidar.param.yaml" description="param file for e2e_model_launch; must only substitute variables that launch declares"/>
   <arg name="input_objects_topic_name"/>
   <arg name="input_pointcloud_topic_name"/>
-  <!--
-    Where this model's detection head stands in for perception's detection stage.
-    It has to be the tracker's own input channel for the LiDAR DNN, not the
-    aggregate /perception/object_recognition/detection/objects: this deployment
-    runs the multi-channel tracker merger (use_multi_channel_tracker_merger
-    defaults to true in tier4_perception_component.launch.xml), and that merger
-    subscribes per detector (detection01 is
-    /perception/object_recognition/detection/$(var lidar_detection_model_type)/objects)
-    and never reads the aggregate. Publishing on the aggregate draws boxes in
-    RViz and feeds the tracker nothing, which reads as working perception with no
-    tracking output. The head is BEVFusion's, so it goes on BEVFusion's channel.
-  -->
-  <arg name="output_detected_objects_topic_name" default="/perception/object_recognition/detection/bevfusion/objects"/>
 
   <!-- trajectory modifier -->
   <arg name="trajectory_modifier_param_path"/>
@@ -60,10 +58,11 @@
     <!-- neural network based planning module -->
     <group>
       <push-ros-namespace namespace="neural_network_based_planner"/>
-      <include file="$(find-pkg-share autoware_tensorrt_e2e)/launch/e2e_planner_resworld.launch.xml">
-        <arg name="data_path" value="$(var data_path)"/>
-        <arg name="model_param_path" value="$(var e2e_planner_param_path)"/>
-        <arg name="input_pointcloud" value="/sensing/lidar/concatenated/pointcloud"/>
+      <include file="$(var e2e_model_launch)">
+        <arg name="param_path" value="$(var e2e_model_param_path)"/>
+        <!-- autoware_tensorrt_e2e keeps its artifacts under ml_models/tensorrt_e2e of
+             Autoware's data directory (the autoware_bevfusion convention). -->
+        <arg name="data_path" value="$(var data_path)/ml_models/tensorrt_e2e"/>
         <arg name="input_odometry" value="/localization/kinematic_state"/>
         <arg name="input_acceleration" value="/localization/acceleration"/>
         <arg name="input_route" value="/planning/mission_planning/route"/>
@@ -71,11 +70,7 @@
         <arg name="input_vector_map" value="/map/vector_map"/>
         <arg name="input_turn_indicators" value="/vehicle/status/turn_indicators_status"/>
         <arg name="output_trajectories" value="/planning/generator/e2e_planner/candidate_trajectories"/>
-        <!-- The frozen detection head on the extractor graph stands in for
-             perception's detection stage, which is why that stage is not
-             launched alongside this planner. See the argument's comment for why
-             it is the per-detector channel and not the aggregate topic. -->
-        <arg name="output_detected_objects" value="$(var output_detected_objects_topic_name)"/>
+        <arg name="output_trajectory" value="/planning/generator/e2e_planner/trajectory"/>
       </include>
       <include file="$(find-pkg-share autoware_trajectory_modifier)/launch/trajectory_modifier.launch.xml">
         <arg name="trajectory_modifier_param_path" value="$(var trajectory_modifier_param_path)"/>
@@ -89,6 +84,9 @@
       <include file="$(find-pkg-share autoware_trajectory_optimizer)/launch/trajectory_optimizer.launch.xml">
         <arg name="trajectory_optimizer_param_path" value="$(var trajectory_optimizer_param_path)"/>
         <arg name="input_trajectories" value="/planning/generator/e2e_planner/modified_candidate_trajectories"/>
+        <!-- The optimizer's own default for this is the diffusion planner's topic, which
+             nothing publishes here. -->
+        <arg name="input_traj" value="/planning/generator/e2e_planner/trajectory"/>
         <arg name="output_traj" value="/planning/trajectory_generator/trajectory"/>
         <arg name="output_trajectories" value="/planning/generator/candidate_trajectories"/>
         <arg name="jerk_filtered_smoother_param_path" value="$(var jerk_filtered_smoother_param_path)"/>

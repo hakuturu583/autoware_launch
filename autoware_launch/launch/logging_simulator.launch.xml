@@ -19,10 +19,7 @@
   <arg name="sensing" default="true" description="launch sensing"/>
   <arg name="localization" default="true" description="launch localization"/>
   <arg name="perception" default="true" description="launch perception"/>
-  <!-- Skip perception's detection stage when something else publishes its output
-       topic, such as an end-to-end planner whose graph carries a detection head.
-       Tracking and prediction still run, on those detections. -->
-  <arg name="launch_detection" default="auto" description="true / false / auto (off for e2e_planner)"/>
+  <arg name="launch_detection" default="true" description="launch perception's object detection stage; tracking and prediction run either way"/>
   <arg name="planning" default="true" description="launch planning"/>
   <arg name="control" default="true" description="launch control"/>
   <!-- Pointcloud container -->

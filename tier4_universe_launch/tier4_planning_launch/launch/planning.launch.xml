@@ -130,7 +130,7 @@
       />
       <let
         name="evaluator_input_reference_trajectory"
-        value="/planning/trajectory_generator/neural_network_based_planner/tensorrt_e2e/output/trajectory"
+        value="/planning/generator/e2e_planner/trajectory"
         if="$(eval &quot;'$(var planning_setting)'=='e2e_planner'&quot;)"
       />
       <let
@@ -144,10 +144,9 @@
         value="/planning/trajectory_generator/neural_network_based_planner/diffusion_planner_node/output/predicted_objects"
         if="$(eval &quot;'$(var planning_setting)'=='diffusion_planner'&quot;)"
       />
-      <!-- The end-to-end planner predicts no objects: its graph has no neighbour
-           tensor, so there is nothing to attach predicted paths to and the
-           output does not exist. Perception's, built from this planner's own
-           detections, is what there is to score against. -->
+      <!-- The generic end-to-end chain publishes no predicted objects, so the
+           evaluator keeps perception's and scores against the model's own
+           pre-optimizer trajectory. -->
       <let
         name="evaluator_input_objects"
         value="/perception/object_recognition/objects"
