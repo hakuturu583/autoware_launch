@@ -1,0 +1,127 @@
+<launch>
+  <!-- planning module -->
+  <!-- ResWorld: LiDAR end-to-end planner with a detection head (autoware_tensorrt_e2e) -->
+  <!--
+    Wired like diffusion_planner.launch.xml beside it: the network produces
+    candidate trajectories, the modifier and the optimizer turn them into one
+    trajectory, and the validator publishes it, all on this model's own topic
+    family /planning/generator/resworld/.... The difference is upstream: this
+    planner consumes the concatenated LiDAR cloud directly and carries a
+    detection head on its own graph, so perception's detection stage has nothing
+    left to do and its output topic is served from here instead (see
+    launch_detection in autoware.launch.xml).
+  -->
+  <arg name="data_path"/>
+  <arg name="e2e_planner_param_path"/>
+  <arg name="input_objects_topic_name"/>
+  <arg name="input_pointcloud_topic_name"/>
+  <arg name="resworld_input_pointcloud" default="/sensing/lidar/concatenated/pointcloud"/>
+  <!--
+    Where this model's detection head stands in for perception's detection stage.
+    It has to be the tracker's own input channel for the LiDAR DNN, not the
+    aggregate /perception/object_recognition/detection/objects: this deployment
+    runs the multi-channel tracker merger (use_multi_channel_tracker_merger
+    defaults to true in tier4_perception_component.launch.xml), and that merger
+    subscribes per detector (detection01 is
+    /perception/object_recognition/detection/$(var lidar_detection_model_type)/objects)
+    and never reads the aggregate. Publishing on the aggregate draws boxes in
+    RViz and feeds the tracker nothing, which reads as working perception with no
+    tracking output. The head is BEVFusion's, so it goes on BEVFusion's channel.
+  -->
+  <arg name="output_detected_objects_topic_name" default="/perception/object_recognition/detection/bevfusion/objects"/>
+
+  <!-- trajectory modifier -->
+  <arg name="trajectory_modifier_param_path"/>
+  <!-- trajectory optimizer -->
+  <arg name="trajectory_optimizer_param_path"/>
+  <arg name="jerk_filtered_smoother_param_path"/>
+  <arg name="velocity_smoother_param_path"/>
+  <arg name="common_smoother_param_path"/>
+  <arg name="elastic_band_param_path"/>
+  <arg name="trajectory_point_fixer_param_path"/>
+  <arg name="trajectory_extender_param_path"/>
+  <arg name="trajectory_spline_smoother_param_path"/>
+  <arg name="trajectory_qp_smoother_param_path"/>
+  <arg name="trajectory_velocity_optimizer_param_path"/>
+  <arg name="trajectory_kinematic_feasibility_enforcer_param_path"/>
+  <arg name="trajectory_mpt_optimizer_param_path"/>
+  <arg name="trajectory_temporal_mpt_optimizer_param_path"/>
+  <arg name="hazard_lights_selector_param_path"/>
+
+  <!-- scenario_planning is not launched in this setting, so nothing else serves the
+       velocity limit the rest of the stack reads. Same stand-in as diffusion_planner. -->
+  <node pkg="demo_nodes_cpp" exec="parameter_blackboard" name="velocity_smoother" namespace="/planning/scenario_planning" output="screen">
+    <param name="max_velocity" value="16.6"/>
+  </node>
+
+  <!-- trajectory generator -->
+  <group>
+    <push-ros-namespace namespace="trajectory_generator"/>
+    <!-- neural network based planning module -->
+    <group>
+      <push-ros-namespace namespace="neural_network_based_planner"/>
+      <include file="$(find-pkg-share autoware_tensorrt_e2e)/launch/e2e_planner_resworld.launch.xml">
+        <!-- autoware_tensorrt_e2e takes its artifacts root, one directory per model
+             under ml_models/tensorrt_e2e of Autoware's data directory (the
+             autoware_bevfusion convention); the model launch appends /resworld. -->
+        <arg name="data_path" value="$(var data_path)/ml_models/tensorrt_e2e"/>
+        <arg name="model_param_path" value="$(var e2e_planner_param_path)"/>
+        <arg name="input_pointcloud" value="$(var resworld_input_pointcloud)"/>
+        <arg name="input_odometry" value="/localization/kinematic_state"/>
+        <arg name="input_acceleration" value="/localization/acceleration"/>
+        <arg name="input_route" value="/planning/mission_planning/route"/>
+        <arg name="input_traffic_signals" value="/perception/traffic_light_recognition/traffic_signals"/>
+        <arg name="input_vector_map" value="/map/vector_map"/>
+        <arg name="input_turn_indicators" value="/vehicle/status/turn_indicators_status"/>
+        <arg name="output_trajectories" value="/planning/generator/resworld/candidate_trajectories"/>
+        <arg name="output_trajectory" value="/planning/generator/resworld/trajectory"/>
+        <!-- The frozen detection head on the extractor graph stands in for
+             perception's detection stage, which is why that stage is not
+             launched alongside this planner. See the argument's comment for why
+             it is the per-detector channel and not the aggregate topic. -->
+        <arg name="output_detected_objects" value="$(var output_detected_objects_topic_name)"/>
+      </include>
+      <include file="$(find-pkg-share autoware_trajectory_modifier)/launch/trajectory_modifier.launch.xml">
+        <arg name="trajectory_modifier_param_path" value="$(var trajectory_modifier_param_path)"/>
+        <arg name="input_candidate_trajectories" value="/planning/generator/resworld/candidate_trajectories"/>
+        <arg name="output_candidate_trajectories" value="/planning/generator/resworld/modified_candidate_trajectories"/>
+        <arg name="input_odometry" value="/localization/kinematic_state"/>
+        <arg name="input_acceleration" value="/localization/acceleration"/>
+        <arg name="input_objects_topic_name" value="$(var input_objects_topic_name)"/>
+        <arg name="input_pointcloud_topic_name" value="$(var input_pointcloud_topic_name)"/>
+      </include>
+      <include file="$(find-pkg-share autoware_trajectory_optimizer)/launch/trajectory_optimizer.launch.xml">
+        <arg name="trajectory_optimizer_param_path" value="$(var trajectory_optimizer_param_path)"/>
+        <arg name="input_trajectories" value="/planning/generator/resworld/modified_candidate_trajectories"/>
+        <!-- The optimizer's own default for this is the diffusion planner's topic, which
+             nothing publishes here. -->
+        <arg name="input_traj" value="/planning/generator/resworld/trajectory"/>
+        <arg name="output_traj" value="/planning/trajectory_generator/trajectory"/>
+        <arg name="output_trajectories" value="/planning/generator/candidate_trajectories"/>
+        <arg name="jerk_filtered_smoother_param_path" value="$(var jerk_filtered_smoother_param_path)"/>
+        <arg name="velocity_smoother_param_path" value="$(var velocity_smoother_param_path)"/>
+        <arg name="common_smoother_param_path" value="$(var common_smoother_param_path)"/>
+        <arg name="elastic_band_param_path" value="$(var elastic_band_param_path)"/>
+        <arg name="trajectory_point_fixer_param_path" value="$(var trajectory_point_fixer_param_path)"/>
+        <arg name="trajectory_extender_param_path" value="$(var trajectory_extender_param_path)"/>
+        <arg name="trajectory_spline_smoother_param_path" value="$(var trajectory_spline_smoother_param_path)"/>
+        <arg name="trajectory_qp_smoother_param_path" value="$(var trajectory_qp_smoother_param_path)"/>
+        <arg name="trajectory_velocity_optimizer_param_path" value="$(var trajectory_velocity_optimizer_param_path)"/>
+        <arg name="trajectory_kinematic_feasibility_enforcer_param_path" value="$(var trajectory_kinematic_feasibility_enforcer_param_path)"/>
+        <arg name="trajectory_mpt_optimizer_param_path" value="$(var trajectory_mpt_optimizer_param_path)"/>
+        <arg name="trajectory_temporal_mpt_optimizer_param_path" value="$(var trajectory_temporal_mpt_optimizer_param_path)"/>
+      </include>
+    </group>
+  </group>
+  <group>
+    <push-ros-namespace namespace="trajectory_selector"/>
+    <!-- TODO: Select a trajectory from candidate trajectories and publish it to planning_validator -->
+  </group>
+
+  <!-- hazard lights selector -->
+  <group>
+    <include file="$(find-pkg-share autoware_hazard_lights_selector)/launch/hazard_lights_selector.launch.xml">
+      <arg name="hazard_lights_selector_param_path" value="$(var hazard_lights_selector_param_path)"/>
+    </include>
+  </group>
+</launch>

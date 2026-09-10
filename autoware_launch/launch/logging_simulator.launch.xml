@@ -8,6 +8,7 @@
   <arg name="data_path" default="$(env HOME)/autoware_data" description="packages data and artifacts directory path"/>
 
   <!-- launch module preset -->
+  <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / e2e_planner / resworld / rule_based"/>
   <arg name="planning_module_preset" default="xx1" description="planning module preset"/>
   <arg name="control_module_preset" default="xx1" description="control module preset"/>
 
@@ -19,7 +20,10 @@
   <arg name="sensing" default="true" description="launch sensing"/>
   <arg name="localization" default="true" description="launch localization"/>
   <arg name="perception" default="true" description="launch perception"/>
-  <arg name="launch_detection" default="true" description="launch perception's object detection stage; tracking and prediction run either way"/>
+  <!-- Skip perception's detection stage when something else publishes its output
+       topic, which ResWorld does from the detection head on its own graph.
+       Tracking and prediction still run, on those detections. -->
+  <arg name="launch_detection" default="auto" description="true / false / auto (off for resworld)"/>
   <arg name="planning" default="true" description="launch planning"/>
   <arg name="control" default="true" description="launch control"/>
   <!-- Pointcloud container -->
@@ -63,6 +67,7 @@
       <arg name="vehicle_model" value="$(var vehicle_model)"/>
       <arg name="sensor_model" value="$(var sensor_model)"/>
       <!-- launch module preset -->
+      <arg name="planning_setting" value="$(var planning_setting)"/>
       <arg name="planning_module_preset" value="$(var planning_module_preset)"/>
       <arg name="control_module_preset" value="$(var control_module_preset)"/>
       <!-- Modules to be launched -->

@@ -21,6 +21,7 @@
   <exec_depend>autoware_global_parameter_loader</exec_depend>
   <exec_depend>autoware_proximity_hazard_checker</exec_depend>
   <exec_depend>autoware_remaining_distance_time_calculator</exec_depend>
+  <exec_depend>autoware_tensorrt_e2e</exec_depend>
   <exec_depend>autoware_trajectory_optimizer</exec_depend>
   <exec_depend>individual_params</exec_depend>
   <exec_depend>python3-bson</exec_depend>
