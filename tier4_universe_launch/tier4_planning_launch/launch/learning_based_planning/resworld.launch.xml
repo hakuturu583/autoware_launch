@@ -93,9 +93,6 @@
       <include file="$(find-pkg-share autoware_trajectory_optimizer)/launch/trajectory_optimizer.launch.xml">
         <arg name="trajectory_optimizer_param_path" value="$(var trajectory_optimizer_param_path)"/>
         <arg name="input_trajectories" value="/planning/generator/resworld/modified_candidate_trajectories"/>
-        <!-- The optimizer's own default for this is the diffusion planner's topic, which
-             nothing publishes here. -->
-        <arg name="input_traj" value="/planning/generator/resworld/trajectory"/>
         <arg name="output_traj" value="/planning/trajectory_generator/trajectory"/>
         <arg name="output_trajectories" value="/planning/generator/candidate_trajectories"/>
         <arg name="jerk_filtered_smoother_param_path" value="$(var jerk_filtered_smoother_param_path)"/>
