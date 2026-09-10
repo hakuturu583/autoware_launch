@@ -27,7 +27,12 @@
   <group>
     <push-ros-namespace namespace="planning"/>
     <!-- manual lane change handler module -->
-    <group>
+    <!-- Not under resworld: the trajectory comes from the model, so a manual lane change
+         request has no consumer here. It is also unsafe to start in a log replay, where the
+         map and the route are both latched and the handler can take the route first: its
+         route_callback dereferences a lanelet map it has not built yet and segfaults in
+         RouteHandler::getLaneletsFromId(), taking the whole planning stack down with it. -->
+    <group unless="$(eval &quot;'$(var planning_setting)'=='resworld'&quot;)">
       <push-ros-namespace namespace="mission_planning"/>
       <include file="$(find-pkg-share autoware_manual_lane_change_handler)/launch/manual_lane_change_handler.launch.xml">
         <arg name="mission_planner_param_path" value="$(var mission_planner_param_path)"/>
