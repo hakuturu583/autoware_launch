@@ -14,6 +14,7 @@
   <arg name="scene_module_manager_param_path"/>
   <!-- The container sensing's CUDA concatenator runs in; the ResWorld planner is composed into it (see resworld.launch.xml). -->
   <arg name="pointcloud_container_name" default="/pointcloud_container" description="container the ResWorld planner node is composed into"/>
+  <arg name="resworld_detach_trajectory" default="false" description="ResWorld only: sideline its trajectory, keep its detection (see resworld.launch.xml)"/>
 
   <!-- Input topic parameters for planning modules -->
   <arg name="planning_input_objects_topic_name" default="/perception/object_recognition/objects"/>
@@ -46,6 +47,7 @@
     <arg name="is_simulation" value="$(var is_simulation)"/>
     <arg name="data_path" value="$(var data_path)"/>
     <arg name="planning_setting" value="$(var planning_setting)"/>
+    <arg name="resworld_detach_trajectory" value="$(var resworld_detach_trajectory)"/>
 
     <!-- Input topic parameters -->
     <arg name="input_objects_topic_name" value="$(var planning_input_objects_topic_name)"/>

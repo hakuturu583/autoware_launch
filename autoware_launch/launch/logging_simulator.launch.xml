@@ -24,6 +24,7 @@
        topic, which ResWorld does from the detection head on its own graph.
        Tracking and prediction still run, on those detections. -->
   <arg name="launch_detection" default="auto" description="true / false / auto (off for resworld)"/>
+  <arg name="resworld_detach_trajectory" default="false" description="ResWorld only: sideline its trajectory, keep its detection (see resworld.launch.xml)"/>
   <arg name="planning" default="true" description="launch planning"/>
   <arg name="control" default="true" description="launch control"/>
   <!-- Pointcloud container -->
@@ -77,6 +78,7 @@
       <arg name="launch_localization" value="$(var localization)"/>
       <arg name="launch_perception" value="$(var perception)"/>
       <arg name="launch_detection" value="$(var launch_detection)"/>
+      <arg name="resworld_detach_trajectory" value="$(var resworld_detach_trajectory)"/>
       <arg name="launch_planning" value="$(var planning)"/>
       <arg name="launch_control" value="$(var control)"/>
       <!-- Global parameters -->

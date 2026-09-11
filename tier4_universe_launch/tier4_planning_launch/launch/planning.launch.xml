@@ -23,6 +23,8 @@
   <arg name="data_path"/>
   <!-- Container the ResWorld planner node is composed into (resworld only) -->
   <arg name="pointcloud_container_name" default="/pointcloud_container"/>
+  <!-- ResWorld only: keep its detection, sideline its trajectory (see resworld.launch.xml). -->
+  <arg name="resworld_detach_trajectory" default="false" description="true: another trajectory model drives; the ResWorld node keeps running for detection only"/>
 
   <group>
     <push-ros-namespace namespace="planning"/>
@@ -115,6 +117,7 @@
         <arg name="input_pointcloud_topic_name" value="$(var input_pointcloud_topic_name)"/>
         <arg name="data_path" value="$(var data_path)"/>
         <arg name="pointcloud_container_name" value="$(var pointcloud_container_name)"/>
+        <arg name="resworld_detach_trajectory" value="$(var resworld_detach_trajectory)"/>
         <arg name="e2e_planner_param_path" value="$(var e2e_planner_param_path)"/>
         <arg name="trajectory_modifier_param_path" value="$(var trajectory_modifier_param_path)"/>
         <arg name="trajectory_optimizer_param_path" value="$(var trajectory_optimizer_param_path)"/>
@@ -193,7 +196,9 @@
            Perception's, built from this planner's own detection head, is what
            there is to score against. The reference is the model's own
            pre-optimizer trajectory. -->
-      <let name="evaluator_input_reference_trajectory" value="/planning/generator/resworld/trajectory" if="$(eval &quot;'$(var planning_setting)'=='resworld'&quot;)"/>
+      <let name="evaluator_input_reference_trajectory" value="/planning/generator/resworld/trajectory" if="$(eval &quot;'$(var planning_setting)'=='resworld' and '$(var resworld_detach_trajectory)'!='true'&quot;)"/>
+      <!-- Detached, the model still publishes its reference trajectory, just on the sidelined topic. -->
+      <let name="evaluator_input_reference_trajectory" value="/planning/generator/resworld/detached/trajectory" if="$(eval &quot;'$(var planning_setting)'=='resworld' and '$(var resworld_detach_trajectory)'=='true'&quot;)"/>
       <let name="evaluator_input_objects" value="/perception/object_recognition/objects" if="$(eval &quot;'$(var planning_setting)'=='resworld'&quot;)"/>
 
       <include file="$(find-pkg-share autoware_planning_evaluator)/launch/planning_evaluator.launch.xml">

@@ -45,6 +45,40 @@
   -->
   <arg name="output_detected_objects_topic_name" default="/perception/object_recognition/detection/bevfusion/objects"/>
 
+  <!--
+    Detach this planner's trajectory from the stack while keeping its detection.
+    Default off: the model's trajectories feed the modifier/optimizer chain below
+    and end up as /planning/trajectory_generator/trajectory, as always.
+
+    Set to true when another trajectory model is to drive the vehicle but the
+    perception pipeline still needs this node's detection head (perception's own
+    detection stage is not launched under planning_setting=resworld, see
+    launch_detection in autoware.launch.xml). Then:
+      - the node keeps running unchanged and keeps publishing
+        $(var output_detected_objects_topic_name) for the tracker;
+      - its trajectory outputs are moved to
+        /planning/generator/resworld/detached/{trajectory,candidate_trajectories},
+        where nothing in the stack reads them (still recordable for comparison);
+      - the modifier and optimizer below keep running for the other model: they
+        read its candidates from $(var detached_candidate_trajectories) and write
+        the modified set to $(var detached_modified_candidate_trajectories), then
+        publish /planning/trajectory_generator/trajectory for the validator as
+        always. The defaults are the diffusion_planner topic family, which is
+        what LatentDrive publishes on; point them elsewhere for another model.
+    The velocity-limit stand-in and the hazard lights selector stay as well.
+  -->
+  <arg name="resworld_detach_trajectory" default="false" description="true: sideline this planner's trajectory outputs to /planning/generator/resworld/detached/... and skip its modifier/optimizer; the node keeps serving detection"/>
+  <let name="resworld_trajectory_topic" value="/planning/generator/resworld/trajectory" unless="$(var resworld_detach_trajectory)"/>
+  <let name="resworld_trajectory_topic" value="/planning/generator/resworld/detached/trajectory" if="$(var resworld_detach_trajectory)"/>
+  <let name="resworld_candidate_trajectories_topic" value="/planning/generator/resworld/candidate_trajectories" unless="$(var resworld_detach_trajectory)"/>
+  <let name="resworld_candidate_trajectories_topic" value="/planning/generator/resworld/detached/candidate_trajectories" if="$(var resworld_detach_trajectory)"/>
+  <arg name="detached_candidate_trajectories" default="/planning/generator/diffusion_planner/candidate_trajectories" description="detached only: the other model's candidate trajectories the modifier reads"/>
+  <arg name="detached_modified_candidate_trajectories" default="/planning/generator/diffusion_planner/modified_candidate_trajectories" description="detached only: where the modifier writes them for the optimizer"/>
+  <let name="modifier_input_candidate_trajectories" value="/planning/generator/resworld/candidate_trajectories" unless="$(var resworld_detach_trajectory)"/>
+  <let name="modifier_input_candidate_trajectories" value="$(var detached_candidate_trajectories)" if="$(var resworld_detach_trajectory)"/>
+  <let name="modified_candidate_trajectories" value="/planning/generator/resworld/modified_candidate_trajectories" unless="$(var resworld_detach_trajectory)"/>
+  <let name="modified_candidate_trajectories" value="$(var detached_modified_candidate_trajectories)" if="$(var resworld_detach_trajectory)"/>
+
   <!-- trajectory modifier -->
   <arg name="trajectory_modifier_param_path"/>
   <!-- trajectory optimizer -->
@@ -89,18 +123,20 @@
         <arg name="input_traffic_signals" value="/perception/traffic_light_recognition/traffic_signals"/>
         <arg name="input_vector_map" value="/map/vector_map"/>
         <arg name="input_turn_indicators" value="/vehicle/status/turn_indicators_status"/>
-        <arg name="output_trajectories" value="/planning/generator/resworld/candidate_trajectories"/>
-        <arg name="output_trajectory" value="/planning/generator/resworld/trajectory"/>
+        <arg name="output_trajectories" value="$(var resworld_candidate_trajectories_topic)"/>
+        <arg name="output_trajectory" value="$(var resworld_trajectory_topic)"/>
         <!-- The frozen detection head on the extractor graph stands in for
              perception's detection stage, which is why that stage is not
              launched alongside this planner. See the argument's comment for why
              it is the per-detector channel and not the aggregate topic. -->
         <arg name="output_detected_objects" value="$(var output_detected_objects_topic_name)"/>
       </include>
+      <!-- Post-processing chain. Detached, it serves the other model's candidates
+           instead of this one's (see resworld_detach_trajectory). -->
       <include file="$(find-pkg-share autoware_trajectory_modifier)/launch/trajectory_modifier.launch.xml">
         <arg name="trajectory_modifier_param_path" value="$(var trajectory_modifier_param_path)"/>
-        <arg name="input_candidate_trajectories" value="/planning/generator/resworld/candidate_trajectories"/>
-        <arg name="output_candidate_trajectories" value="/planning/generator/resworld/modified_candidate_trajectories"/>
+        <arg name="input_candidate_trajectories" value="$(var modifier_input_candidate_trajectories)"/>
+        <arg name="output_candidate_trajectories" value="$(var modified_candidate_trajectories)"/>
         <arg name="input_odometry" value="/localization/kinematic_state"/>
         <arg name="input_acceleration" value="/localization/acceleration"/>
         <arg name="input_objects_topic_name" value="$(var input_objects_topic_name)"/>
@@ -108,7 +144,7 @@
       </include>
       <include file="$(find-pkg-share autoware_trajectory_optimizer)/launch/trajectory_optimizer.launch.xml">
         <arg name="trajectory_optimizer_param_path" value="$(var trajectory_optimizer_param_path)"/>
-        <arg name="input_trajectories" value="/planning/generator/resworld/modified_candidate_trajectories"/>
+        <arg name="input_trajectories" value="$(var modified_candidate_trajectories)"/>
         <arg name="output_traj" value="/planning/trajectory_generator/trajectory"/>
         <arg name="output_trajectories" value="/planning/generator/candidate_trajectories"/>
         <arg name="jerk_filtered_smoother_param_path" value="$(var jerk_filtered_smoother_param_path)"/>

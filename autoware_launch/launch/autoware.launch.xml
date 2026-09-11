@@ -15,6 +15,11 @@
        either way. true/false override, for a run that assembles the pieces
        itself and has no planning_setting to speak of. -->
   <arg name="launch_detection" default="auto" description="true / false / auto (off for resworld)"/>
+  <!-- ResWorld only. true: another trajectory model drives (it must publish
+       /planning/trajectory_generator/trajectory itself); the ResWorld node keeps
+       running for its detection head and its trajectories move to
+       /planning/generator/resworld/detached/.... See resworld.launch.xml. -->
+  <arg name="resworld_detach_trajectory" default="false" description="ResWorld only: sideline its trajectory, keep its detection"/>
   <arg name="planning_module_preset" default="xx1" description="planning module preset"/>
   <arg name="control_module_preset" default="xx1" description="control module preset"/>
 
@@ -177,6 +182,7 @@
       <arg name="planning_setting" value="$(var planning_setting)"/>
       <arg name="data_path" value="$(var data_path)"/>
       <arg name="pointcloud_container_name" value="$(var pointcloud_container_name)"/>
+      <arg name="resworld_detach_trajectory" value="$(var resworld_detach_trajectory)"/>
     </include>
   </group>
 
