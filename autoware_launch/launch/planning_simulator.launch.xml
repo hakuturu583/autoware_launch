@@ -7,7 +7,7 @@
   <arg name="data_path" default="$(env HOME)/autoware_data" description="packages data and artifacts directory path"/>
 
   <!-- launch module preset -->
-  <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / e2e_planner / resworld / rule_based"/>
+  <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / latentdrive / e2e_planner / resworld / rule_based"/>
   <arg name="resworld_detach_trajectory" default="false" description="ResWorld only: sideline its trajectory, keep its detection (see resworld.launch.xml)"/>
   <arg name="planning_module_preset" default="xx1" description="planning module preset"/>
   <arg name="control_module_preset" default="xx1" description="control module preset"/>

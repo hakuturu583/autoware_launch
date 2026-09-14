@@ -9,7 +9,7 @@
   <arg name="is_simulation" default="false"/>
   <arg name="use_sim_time" default="false"/>
   <arg name="vehicle_model" default="sample_vehicle"/>
-  <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / e2e_planner / resworld / rule_based"/>
+  <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / latentdrive / e2e_planner / resworld / rule_based"/>
   <arg name="data_path" default="/opt/autoware/mlmodels" description="packages data and artifacts directory path"/>
   <arg name="scene_module_manager_param_path"/>
   <!-- The container sensing's CUDA concatenator runs in; the ResWorld planner is composed into it (see resworld.launch.xml). -->

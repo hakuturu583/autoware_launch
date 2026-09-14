@@ -1,35 +1,29 @@
 <launch>
   <!-- planning module -->
-  <!-- end-to-end planner (autoware_tensorrt_e2e): the generic skeleton -->
+  <!-- LatentDrive: local post-processing only; the neural planner runs on another ECU -->
   <!--
-    This is the model-agnostic chain for a planner served by
-    autoware_tensorrt_e2e: the network produces candidate trajectories, the
-    modifier and the optimizer turn them into one trajectory, and the validator
-    publishes it. It is wired like diffusion_planner.launch.xml beside it, on
-    its own topic family /planning/generator/e2e_planner/....
+    Same chain as diffusion_planner.launch.xml (modifier → optimizer → validator) on
+    the diffusion_planner topic family. Perception keeps its normal detection stage
+    (BEVFusion); nothing here replaces it.
 
-    Which network runs is the one thing left open. autoware_tensorrt_e2e ships
-    one launch per model, because what a model consumes, what its artifacts are
-    called and what it publishes are that model's business. The include below
-    is chosen by e2e_model_launch and defaults to the package's generic LiDAR
-    example. A model that is actually deployed does not go through this
-    argument: it gets its own planning_setting and its own launch next to this
-    one, on its own branch (latentdrive.launch.xml for remote-planner ECUs,
-    resworld.launch.xml), the
-    way this file itself sits next to diffusion_planner.launch.xml.
+    The remote LatentDrive stack must publish candidate trajectories to
+    input_candidate_trajectories (default: diffusion_planner topic family, same
+    as resworld_detach_trajectory detached_candidate_trajectories). Optionally
+    publish a raw model trajectory on the diffusion_planner_node output path for
+    the planning evaluator.
   -->
-  <arg name="data_path"/>
-  <!-- This vehicle's deployment config for autoware_tensorrt_e2e models
-       (autoware_launch neural_net_planner/e2e_planner.param.yaml). It is written
-       against the variables a deployed model's launch declares (model_path,
-       planner_onnx, extractor_onnx), so it pairs with that model's own launch
-       (resworld.launch.xml), not with the generic example below, whose param
-       file substitutes only data_path. -->
-  <arg name="e2e_planner_param_path"/>
-  <arg name="e2e_model_launch" default="$(find-pkg-share autoware_tensorrt_e2e)/launch/e2e_planner_lidar.launch.xml" description="autoware_tensorrt_e2e model launch to run behind the modifier/optimizer chain"/>
-  <arg name="e2e_model_param_path" default="$(find-pkg-share autoware_tensorrt_e2e)/config/e2e_planner_lidar.param.yaml" description="param file for e2e_model_launch; must only substitute variables that launch declares"/>
   <arg name="input_objects_topic_name"/>
   <arg name="input_pointcloud_topic_name"/>
+  <arg
+    name="input_candidate_trajectories"
+    default="/planning/generator/diffusion_planner/candidate_trajectories"
+    description="candidate trajectories from the remote LatentDrive planner"
+  />
+  <arg
+    name="modified_candidate_trajectories"
+    default="/planning/generator/diffusion_planner/modified_candidate_trajectories"
+    description="modifier output consumed by the optimizer"
+  />
 
   <!-- trajectory modifier -->
   <arg name="trajectory_modifier_param_path"/>
@@ -56,27 +50,12 @@
   <!-- trajectory generator -->
   <group>
     <push-ros-namespace namespace="trajectory_generator"/>
-    <!-- neural network based planning module -->
     <group>
       <push-ros-namespace namespace="neural_network_based_planner"/>
-      <include file="$(var e2e_model_launch)">
-        <arg name="param_path" value="$(var e2e_model_param_path)"/>
-        <!-- autoware_tensorrt_e2e keeps its artifacts directly under
-             Autoware's data directory (the autoware_bevfusion convention). -->
-        <arg name="data_path" value="$(var data_path)/tensorrt_e2e"/>
-        <arg name="input_odometry" value="/localization/kinematic_state"/>
-        <arg name="input_acceleration" value="/localization/acceleration"/>
-        <arg name="input_route" value="/planning/mission_planning/route"/>
-        <arg name="input_traffic_signals" value="/perception/traffic_light_recognition/traffic_signals"/>
-        <arg name="input_vector_map" value="/map/vector_map"/>
-        <arg name="input_turn_indicators" value="/vehicle/status/turn_indicators_status"/>
-        <arg name="output_trajectories" value="/planning/generator/e2e_planner/candidate_trajectories"/>
-        <arg name="output_trajectory" value="/planning/generator/e2e_planner/trajectory"/>
-      </include>
       <include file="$(find-pkg-share autoware_trajectory_modifier)/launch/trajectory_modifier.launch.xml">
         <arg name="trajectory_modifier_param_path" value="$(var trajectory_modifier_param_path)"/>
-        <arg name="input_candidate_trajectories" value="/planning/generator/e2e_planner/candidate_trajectories"/>
-        <arg name="output_candidate_trajectories" value="/planning/generator/e2e_planner/modified_candidate_trajectories"/>
+        <arg name="input_candidate_trajectories" value="$(var input_candidate_trajectories)"/>
+        <arg name="output_candidate_trajectories" value="$(var modified_candidate_trajectories)"/>
         <arg name="input_odometry" value="/localization/kinematic_state"/>
         <arg name="input_acceleration" value="/localization/acceleration"/>
         <arg name="input_objects_topic_name" value="$(var input_objects_topic_name)"/>
@@ -84,7 +63,7 @@
       </include>
       <include file="$(find-pkg-share autoware_trajectory_optimizer)/launch/trajectory_optimizer.launch.xml">
         <arg name="trajectory_optimizer_param_path" value="$(var trajectory_optimizer_param_path)"/>
-        <arg name="input_trajectories" value="/planning/generator/e2e_planner/modified_candidate_trajectories"/>
+        <arg name="input_trajectories" value="$(var modified_candidate_trajectories)"/>
         <arg name="output_traj" value="/planning/trajectory_generator/trajectory"/>
         <arg name="output_trajectories" value="/planning/generator/candidate_trajectories"/>
         <arg name="jerk_filtered_smoother_param_path" value="$(var jerk_filtered_smoother_param_path)"/>

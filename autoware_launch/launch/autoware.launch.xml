@@ -8,7 +8,7 @@
   <arg name="data_path" default="$(env HOME)/autoware_data" description="packages data and artifacts directory path"/>
 
   <!-- launch module preset -->
-  <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / e2e_planner / resworld / rule_based"/>
+  <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / latentdrive / e2e_planner / resworld / rule_based"/>
   <!-- Perception's detection stage. "auto" turns it off exactly when the planner
        publishes its output topic itself, which ResWorld does: two publishers on
        that topic would be worse than either alone. Tracking and prediction run
