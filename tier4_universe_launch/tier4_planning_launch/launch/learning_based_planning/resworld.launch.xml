@@ -126,6 +126,10 @@
         <arg name="input_turn_indicators" value="/vehicle/status/turn_indicators_status"/>
         <arg name="output_trajectories" value="$(var resworld_candidate_trajectories_topic)"/>
         <arg name="output_trajectory" value="$(var resworld_trajectory_topic)"/>
+        <!-- The vehicle's own dimensions (see e2e_planner.launch.xml beside this
+             file): without it the node plans with the sample vehicle's, and the
+             ego_shape token never matches the one the network trained on. -->
+        <arg name="vehicle_info_param_path" value="$(var vehicle_param_file)"/>
         <!-- The frozen detection head on the extractor graph stands in for
              perception's detection stage, which is why that stage is not
              launched alongside this planner. See the argument's comment for why
