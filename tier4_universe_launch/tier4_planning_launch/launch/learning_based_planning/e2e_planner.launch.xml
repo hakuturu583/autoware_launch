@@ -60,9 +60,9 @@
       <push-ros-namespace namespace="neural_network_based_planner"/>
       <include file="$(var e2e_model_launch)">
         <arg name="param_path" value="$(var e2e_model_param_path)"/>
-        <!-- autoware_tensorrt_e2e keeps its artifacts under ml_models/tensorrt_e2e of
+        <!-- autoware_tensorrt_e2e keeps its artifacts directly under
              Autoware's data directory (the autoware_bevfusion convention). -->
-        <arg name="data_path" value="$(var data_path)/ml_models/tensorrt_e2e"/>
+        <arg name="data_path" value="$(var data_path)/tensorrt_e2e"/>
         <arg name="input_odometry" value="/localization/kinematic_state"/>
         <arg name="input_acceleration" value="/localization/acceleration"/>
         <arg name="input_route" value="/planning/mission_planning/route"/>
