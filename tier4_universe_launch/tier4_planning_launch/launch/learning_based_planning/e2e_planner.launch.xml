@@ -71,6 +71,12 @@
         <arg name="input_turn_indicators" value="/vehicle/status/turn_indicators_status"/>
         <arg name="output_trajectories" value="/planning/generator/e2e_planner/candidate_trajectories"/>
         <arg name="output_trajectory" value="/planning/generator/e2e_planner/trajectory"/>
+        <!-- The vehicle's own dimensions. The node launch defaults this to
+             autoware_vehicle_info_utils' SAMPLE vehicle, and an explicit param file
+             loaded after the global one wins, so without this line a node composed
+             into a container plans for a car 0.4 m longer than the one it drives:
+             the ego_shape token the network was trained on never matched. -->
+        <arg name="vehicle_info_param_path" value="$(var vehicle_param_file)"/>
       </include>
       <include file="$(find-pkg-share autoware_trajectory_modifier)/launch/trajectory_modifier.launch.xml">
         <arg name="trajectory_modifier_param_path" value="$(var trajectory_modifier_param_path)"/>
