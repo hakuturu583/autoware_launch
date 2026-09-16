@@ -78,6 +78,7 @@
         <arg name="trajectory_kinematic_feasibility_enforcer_param_path" value="$(var trajectory_kinematic_feasibility_enforcer_param_path)"/>
         <arg name="trajectory_mpt_optimizer_param_path" value="$(var trajectory_mpt_optimizer_param_path)"/>
         <arg name="trajectory_temporal_mpt_optimizer_param_path" value="$(var trajectory_temporal_mpt_optimizer_param_path)"/>
+        <arg name="trajectory_time_sequence_raw_optimizer_param_path" value="$(var trajectory_time_sequence_raw_optimizer_param_path)"/>
         <arg name="hazard_lights_selector_param_path" value="$(var hazard_lights_selector_param_path)"/>
       </include>
     </group>
@@ -104,6 +105,7 @@
         <arg name="trajectory_kinematic_feasibility_enforcer_param_path" value="$(var trajectory_kinematic_feasibility_enforcer_param_path)"/>
         <arg name="trajectory_mpt_optimizer_param_path" value="$(var trajectory_mpt_optimizer_param_path)"/>
         <arg name="trajectory_temporal_mpt_optimizer_param_path" value="$(var trajectory_temporal_mpt_optimizer_param_path)"/>
+        <arg name="trajectory_time_sequence_raw_optimizer_param_path" value="$(var trajectory_time_sequence_raw_optimizer_param_path)"/>
         <arg name="hazard_lights_selector_param_path" value="$(var hazard_lights_selector_param_path)"/>
       </include>
     </group>
@@ -129,6 +131,7 @@
         <arg name="trajectory_kinematic_feasibility_enforcer_param_path" value="$(var trajectory_kinematic_feasibility_enforcer_param_path)"/>
         <arg name="trajectory_mpt_optimizer_param_path" value="$(var trajectory_mpt_optimizer_param_path)"/>
         <arg name="trajectory_temporal_mpt_optimizer_param_path" value="$(var trajectory_temporal_mpt_optimizer_param_path)"/>
+        <arg name="trajectory_time_sequence_raw_optimizer_param_path" value="$(var trajectory_time_sequence_raw_optimizer_param_path)"/>
         <arg name="hazard_lights_selector_param_path" value="$(var hazard_lights_selector_param_path)"/>
       </include>
     </group>
@@ -156,6 +159,7 @@
         <arg name="trajectory_kinematic_feasibility_enforcer_param_path" value="$(var trajectory_kinematic_feasibility_enforcer_param_path)"/>
         <arg name="trajectory_mpt_optimizer_param_path" value="$(var trajectory_mpt_optimizer_param_path)"/>
         <arg name="trajectory_temporal_mpt_optimizer_param_path" value="$(var trajectory_temporal_mpt_optimizer_param_path)"/>
+        <arg name="trajectory_time_sequence_raw_optimizer_param_path" value="$(var trajectory_time_sequence_raw_optimizer_param_path)"/>
         <arg name="hazard_lights_selector_param_path" value="$(var hazard_lights_selector_param_path)"/>
       </include>
     </group>
@@ -189,11 +193,7 @@
         value="/planning/trajectory_generator/neural_network_based_planner/diffusion_planner_node/output/trajectory"
         if="$(eval &quot;'$(var planning_setting)'=='diffusion_planner'&quot;)"
       />
-      <let
-        name="evaluator_input_reference_trajectory"
-        value="/planning/generator/e2e_planner/trajectory"
-        if="$(eval &quot;'$(var planning_setting)'=='e2e_planner'&quot;)"
-      />
+      <let name="evaluator_input_reference_trajectory" value="/planning/generator/e2e_planner/trajectory" if="$(eval &quot;'$(var planning_setting)'=='e2e_planner'&quot;)"/>
       <let
         name="evaluator_input_reference_trajectory"
         value="/planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory"
@@ -208,11 +208,7 @@
       <!-- The generic end-to-end chain publishes no predicted objects, so the
            evaluator keeps perception's and scores against the model's own
            pre-optimizer trajectory. -->
-      <let
-        name="evaluator_input_objects"
-        value="/perception/object_recognition/objects"
-        if="$(eval &quot;'$(var planning_setting)'=='e2e_planner'&quot;)"
-      />
+      <let name="evaluator_input_objects" value="/perception/object_recognition/objects" if="$(eval &quot;'$(var planning_setting)'=='e2e_planner'&quot;)"/>
       <let name="evaluator_input_objects" value="/perception/object_recognition/objects" if="$(eval &quot;'$(var planning_setting)'=='rule_based'&quot;)"/>
 
       <!-- ResWorld predicts no objects: its graph has no neighbour tensor, so there
@@ -220,9 +216,17 @@
            Perception's, built from this planner's own detection head, is what
            there is to score against. The reference is the model's own
            pre-optimizer trajectory. -->
-      <let name="evaluator_input_reference_trajectory" value="/planning/generator/resworld/trajectory" if="$(eval &quot;'$(var planning_setting)'=='resworld' and '$(var resworld_detach_trajectory)'!='true'&quot;)"/>
+      <let
+        name="evaluator_input_reference_trajectory"
+        value="/planning/generator/resworld/trajectory"
+        if="$(eval &quot;'$(var planning_setting)'=='resworld' and '$(var resworld_detach_trajectory)'!='true'&quot;)"
+      />
       <!-- Detached, the model still publishes its reference trajectory, just on the sidelined topic. -->
-      <let name="evaluator_input_reference_trajectory" value="/planning/generator/resworld/detached/trajectory" if="$(eval &quot;'$(var planning_setting)'=='resworld' and '$(var resworld_detach_trajectory)'=='true'&quot;)"/>
+      <let
+        name="evaluator_input_reference_trajectory"
+        value="/planning/generator/resworld/detached/trajectory"
+        if="$(eval &quot;'$(var planning_setting)'=='resworld' and '$(var resworld_detach_trajectory)'=='true'&quot;)"
+      />
       <let name="evaluator_input_objects" value="/perception/object_recognition/objects" if="$(eval &quot;'$(var planning_setting)'=='resworld'&quot;)"/>
 
       <!-- Remote LatentDrive uses the same reference topic family as local diffusion_planner. -->
