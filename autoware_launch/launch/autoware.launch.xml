@@ -8,6 +8,7 @@
   <arg name="data_path" default="$(env HOME)/autoware_data" description="packages data and artifacts directory path"/>
 
   <!-- launch module preset -->
+  <arg name="param_variant_suffix" default="" description="Suffix appended to the parameter files that have a simulator-specific variant (&quot;_carla&quot; picks mpc_carla.param.yaml and trajectory_velocity_optimizer_carla.param.yaml). Empty keeps the real vehicle&apos;s files"/>
   <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / latentdrive / e2e_planner / resworld / rule_based"/>
   <!-- Perception's detection stage. "auto" turns it off exactly when the planner
        publishes its output topic itself, which ResWorld does: two publishers on
@@ -172,6 +173,7 @@
   <!-- Planning -->
   <group if="$(var launch_planning)">
     <include file="$(find-pkg-share autoware_launch)/launch/components/tier4_planning_component.launch.xml">
+      <arg name="param_variant_suffix" value="$(var param_variant_suffix)"/>
       <arg name="module_preset" value="$(var planning_module_preset)"/>
       <arg name="use_experimental_lane_change_function" value="$(var use_experimental_lane_change_function)"/>
       <arg name="scene_module_manager_param_path" value="$(var scene_module_manager_param_path)"/>
@@ -189,6 +191,7 @@
   <!-- Control -->
   <group if="$(var launch_control)">
     <include file="$(find-pkg-share autoware_launch)/launch/components/tier4_control_component.launch.xml">
+      <arg name="param_variant_suffix" value="$(var param_variant_suffix)"/>
       <arg name="module_preset" value="$(var control_module_preset)"/>
       <arg name="use_sim_time" value="$(var use_sim_time)"/>
       <arg name="vehicle_model" value="$(var vehicle_model)"/>

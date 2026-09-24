@@ -32,6 +32,7 @@
     </include>
   </group>
 
+  <arg name="param_variant_suffix" default="" description="Suffix appended to the parameter files that have a simulator-specific variant (&quot;_carla&quot; picks mpc_carla.param.yaml and trajectory_velocity_optimizer_carla.param.yaml). Empty keeps the real vehicle&apos;s files"/>
   <arg name="use_individual_control_param" default="true"/>
 
   <let name="latlon_controller_param_path_dir" value="$(var vehicle_id)" if="$(var use_individual_control_param)"/>
@@ -50,7 +51,7 @@
     <arg name="trajectory_follower_node_param_path" value="$(find-pkg-share autoware_launch)/config/control/trajectory_follower/trajectory_follower_node.param.yaml"/>
     <arg
       name="lat_controller_param_path"
-      value="$(find-pkg-share autoware_launch)/config/control/trajectory_follower/$(var latlon_controller_param_path_dir)/lateral/$(var lateral_controller_mode).param.yaml"
+      value="$(find-pkg-share autoware_launch)/config/control/trajectory_follower/$(var latlon_controller_param_path_dir)/lateral/$(var lateral_controller_mode)$(var param_variant_suffix).param.yaml"
     />
     <arg
       name="lon_controller_param_path"

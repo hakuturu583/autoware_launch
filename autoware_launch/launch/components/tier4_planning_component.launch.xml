@@ -20,6 +20,7 @@
   <arg name="planning_input_objects_topic_name" default="/perception/object_recognition/objects"/>
   <arg name="planning_input_pointcloud_topic_name" default="/perception/obstacle_segmentation/pointcloud"/>
 
+  <arg name="param_variant_suffix" default="" description="Suffix appended to the parameter files that have a simulator-specific variant (&quot;_carla&quot; picks mpc_carla.param.yaml and trajectory_velocity_optimizer_carla.param.yaml). Empty keeps the real vehicle&apos;s files"/>
   <!-- Diffusion Planner Trajectory Optimizer Plugins-->
   <let name="neural_net_planner_config_path" value="$(find-pkg-share autoware_launch)/config/planning/neural_net_planner"/>
   <let name="optimizer_plugins_config_path" value="$(var neural_net_planner_config_path)/trajectory_optimizer_plugins"/>
@@ -162,7 +163,7 @@
     <arg name="trajectory_extender_param_path" value="$(var optimizer_plugins_config_path)/trajectory_extender.param.yaml"/>
     <arg name="trajectory_spline_smoother_param_path" value="$(var optimizer_plugins_config_path)/trajectory_spline_smoother.param.yaml"/>
     <arg name="trajectory_qp_smoother_param_path" value="$(var optimizer_plugins_config_path)/trajectory_qp_smoother.param.yaml"/>
-    <arg name="trajectory_velocity_optimizer_param_path" value="$(var optimizer_plugins_config_path)/trajectory_velocity_optimizer.param.yaml"/>
+    <arg name="trajectory_velocity_optimizer_param_path" value="$(var optimizer_plugins_config_path)/trajectory_velocity_optimizer$(var param_variant_suffix).param.yaml"/>
     <arg name="trajectory_kinematic_feasibility_enforcer_param_path" value="$(var optimizer_plugins_config_path)/trajectory_kinematic_feasibility_enforcer.param.yaml"/>
     <arg name="trajectory_mpt_optimizer_param_path" value="$(var optimizer_plugins_config_path)/trajectory_mpt_optimizer.param.yaml"/>
     <arg name="trajectory_temporal_mpt_optimizer_param_path" value="$(var optimizer_plugins_config_path)/trajectory_temporal_mpt_optimizer.param.yaml"/>
