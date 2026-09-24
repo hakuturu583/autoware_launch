@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-  <arg name="param_variant_suffix" default="" description="Suffix appended to the parameter files that have a simulator-specific variant (&quot;_carla&quot; picks mpc_carla.param.yaml and trajectory_velocity_optimizer_carla.param.yaml). Empty keeps the real vehicle&apos;s files"/>
   <!-- Essential parameters -->
   <arg name="use_sim_time" default="true" description="use simulation time"/>
   <arg name="map_path" description="point cloud and lanelet2 map directory path"/>
@@ -12,6 +11,8 @@
 
   <!-- launch module preset -->
   <arg name="planning_module_preset" default="xx1" description="planning module preset"/>
+  <arg name="param_variant_suffix" default="" description="Suffix appended to the parameter files that have a simulator-specific variant (&quot;_carla&quot; picks mpc_carla.param.yaml, pid_carla.param.yaml and trajectory_velocity_optimizer_carla.param.yaml). Empty keeps the real vehicle&apos;s files"/>
+  <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / latentdrive / e2e_planner / resworld / rule_based"/>
   <arg name="control_module_preset" default="xx1" description="control module preset"/>
 
   <!-- Optional parameters -->
@@ -60,6 +61,7 @@
       <arg name="data_path" value="$(var data_path)"/>
       <!-- launch module preset -->
       <arg name="planning_module_preset" value="$(var planning_module_preset)"/>
+      <arg name="planning_setting" value="$(var planning_setting)"/>
       <arg name="control_module_preset" value="$(var control_module_preset)"/>
       <!-- Modules to be launched -->
       <arg name="launch_vehicle" value="$(var vehicle)"/>
