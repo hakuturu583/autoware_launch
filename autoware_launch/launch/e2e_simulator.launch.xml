@@ -9,6 +9,75 @@
   <arg name="simulator_type" default="awsim" description="select the simulator type ('awsim' or 'carla')"/>
   <arg name="launch_simulator_interface" default="true" description="launch simulator interface (e.g. autoware_carla_interface when simulator_type is 'carla')"/>
 
+  <!-- CARLA simulator interface (autoware_carla_interface).
+       Declared here so one `ros2 launch autoware_launch e2e_simulator.launch.xml`
+       configures the interface it starts, instead of the interface having to be
+       launched separately with launch_simulator_interface:=false. Every default
+       mirrors autoware_carla_interface.launch.xml, so an unset argument leaves
+       the interface exactly as it was. -->
+  <arg name="use_e2e_planning" default="false" description="let the interface start the end-to-end planning bridge"/>
+  <arg name="host" default="localhost" description="CARLA RPC host"/>
+  <arg name="port" default="2000" description="CARLA RPC port"/>
+  <arg name="timeout" default="20" description="seconds to wait for the CARLA RPC"/>
+  <arg name="ego_vehicle_role_name" default="ego_vehicle" description="role_name of the ego actor"/>
+  <arg name="vehicle_type" default="vehicle.toyota.prius" description="CARLA blueprint of the ego"/>
+  <arg name="spawn_point" default="None" description="ego spawn point 'x,y,z,roll,pitch,yaw' (None = CARLA's)"/>
+  <arg name="carla_launch_control" default="true" description="let the interface start and stop the CARLA server"/>
+  <arg name="carla_map" default="" description="CARLA world to load (empty keeps the running one)"/>
+  <arg name="sync_mode" default="True" description="run CARLA in synchronous mode"/>
+  <arg name="fixed_delta_seconds" default="0.05" description="CARLA tick length"/>
+  <arg name="use_traffic_manager" default="False" description="spawn CARLA's traffic manager"/>
+  <arg name="max_real_delta_seconds" default="0.05" description="wall-clock floor per tick"/>
+  <arg name="tick_follower" default="False" description="tick CARLA from the follower instead of the interface"/>
+  <arg name="spawn_point_ground_snap" default="False" description="drop the spawn point onto the road surface"/>
+  <arg name="spawn_point_ground_offset_z" default="0.5" description="height above the snapped ground to spawn at"/>
+  <arg name="initial_pose_ground_offset_z" default="1.0" description="height offset of the published initial pose"/>
+  <arg name="ego_attach_timeout" default="60.0" description="seconds to wait for a scenario's ego before giving up"/>
+  <arg name="force_load_world" default="False" description="reload the world even when it is already loaded"/>
+  <arg name="min_positive_throttle" default="0.0" description="throttle floor that gets a standing car moving"/>
+  <arg name="min_positive_throttle_speed_threshold" default="0.8" description="speed below which that floor applies"/>
+  <arg name="no_rendering_mode" default="False" description="run CARLA without rendering"/>
+  <arg name="map_origin_x" default="0.0" description="MGRS to CARLA offset, x"/>
+  <arg name="map_origin_y" default="0.0" description="MGRS to CARLA offset, y"/>
+  <arg name="publish_ground_truth_objects" default="False" description="publish CARLA's actors as perception objects"/>
+  <arg name="use_light_weight_sensor_mapping" default="False" description="fewer sensors at lower rates"/>
+  <arg name="sensor_kit_name" default="carla_sensor_kit_description" description="sensor kit package with the calibration"/>
+  <let name="sensor_mapping_file_default" value="$(find-pkg-share autoware_carla_interface)/config/sensor_mapping_light_weight.yaml" if="$(var use_light_weight_sensor_mapping)"/>
+  <let name="sensor_mapping_file_default" value="$(find-pkg-share autoware_carla_interface)/config/sensor_mapping.yaml" unless="$(var use_light_weight_sensor_mapping)"/>
+  <arg name="sensor_mapping_file" default="$(var sensor_mapping_file_default)" description="sensor mapping YAML"/>
+  <arg name="render_with_splatsim" default="false" description="render sensors from a 3DGS scene with splatsim"/>
+  <arg name="splatsim_render_camera" default="false" description="render cameras with splatsim"/>
+  <arg name="splatsim_render_lidar" default="true" description="render LiDAR with splatsim"/>
+  <arg name="splatsim_tileset_path" default="" description="host path to the .usdz scene (required by splatsim)"/>
+  <arg name="splatsim_image" default="splatsim:latest" description="splatsim container image ({arch} = the host GPU's)"/>
+  <arg name="splatsim_grpc_port" default="50051" description="splatsim camera gRPC port"/>
+  <arg name="splatsim_lidar_grpc_port" default="50061" description="splatsim LiDAR gRPC port"/>
+  <arg name="splatsim_use_sh" default="true" description="evaluate spherical harmonics"/>
+  <arg name="splatsim_enable_lod" default="true" description="enable level of detail"/>
+  <arg name="splatsim_device" default="cuda:0" description="device splatsim renders on"/>
+  <arg name="splatsim_restart_container" default="false" description="restart a running splatsim container"/>
+  <arg name="splatsim_compress_format" default="jpeg" description="camera image compression"/>
+  <arg name="max_wheel_steer_angle_deg" default="0.0" description="override the blueprint's max steer angle"/>
+  <arg name="steering_lag_time_constant" default="0.05" description="first-order lag of the steering response"/>
+  <arg name="steer_response_exponent" default="0.0" description="exponent of the steer response curve"/>
+  <arg name="flatten_steering_curve" default="false" description="flatten the steering curve"/>
+  <arg name="wake_sleeping_physics" default="false" description="wake a sleeping physics body (CARLA 0.10/Chaos)"/>
+  <arg name="traffic_light.publish" default="false" description="publish traffic light state from the map"/>
+  <arg name="traffic_light.force_green" default="false" description="force every group green"/>
+  <arg name="traffic_light.map_path" default="" description="lanelet2 map the traffic light state is read from"/>
+  <arg name="traffic_light.match_distance" default="5.0" description="distance to match a CARLA light to the map"/>
+  <arg name="traffic_light.match_ratio" default="0.6" description="ratio to match a CARLA light to the map"/>
+  <arg name="traffic_light.id_map" default="" description="explicit CARLA-to-map traffic light id map"/>
+  <arg name="with_scenario" default="" description="scenario to run: a wheelhouse or '&lt;package&gt;==&lt;version&gt;#&lt;scenario&gt;'"/>
+  <arg name="scenario_python" default="python3.12" description="interpreter the scenario venv is built with"/>
+  <arg name="scenario_pip_args" default="" description="extra pip arguments for the scenario venv (an index, say)"/>
+  <arg name="scenario_overrides" default="" description="Hydra overrides handed to the scenario runner"/>
+  <arg name="scenario_world_wait_timeout" default="300.0" description="seconds to wait for the scenario's world"/>
+  <arg name="bridge_address" default="localhost:50052" description="address of the scenario bridge"/>
+  <arg name="auto_engage" default="true" description="engage autonomous mode as soon as it is available"/>
+  <arg name="initialize_localization" default="true" description="publish an initial pose"/>
+  <arg name="require_localization_initialized" default="true" description="wait for localization before engaging"/>
+
   <!-- launch module preset -->
   <arg name="planning_module_preset" default="xx1" description="planning module preset"/>
   <arg name="param_variant_suffix" default="" description="Suffix appended to the parameter files that have a simulator-specific variant (&quot;_carla&quot; picks mpc_carla.param.yaml, pid_carla.param.yaml, trajectory_velocity_optimizer_carla.param.yaml and boundary_departure_checker_carla.param.yaml). Empty keeps the real vehicle&apos;s files"/>
@@ -47,7 +116,71 @@
     <!-- AWSIM does not require a simulator interface since it publishes autoware_msgs directly -->
     <!-- CARLA -->
     <group scoped="false" if="$(equals $(var simulator_type) 'carla')">
-      <include file="$(find-pkg-share autoware_carla_interface)/autoware_carla_interface.launch.xml"/>
+      <include file="$(find-pkg-share autoware_carla_interface)/launch/autoware_carla_interface.launch.xml">
+        <arg name="use_sim_time" value="$(var use_sim_time)"/>
+        <arg name="vehicle_model" value="$(var vehicle_model)"/>
+        <arg name="map_path" value="$(var map_path)"/>
+        <arg name="use_e2e_planning" value="$(var use_e2e_planning)"/>
+        <arg name="host" value="$(var host)"/>
+        <arg name="port" value="$(var port)"/>
+        <arg name="timeout" value="$(var timeout)"/>
+        <arg name="ego_vehicle_role_name" value="$(var ego_vehicle_role_name)"/>
+        <arg name="vehicle_type" value="$(var vehicle_type)"/>
+        <arg name="spawn_point" value="$(var spawn_point)"/>
+        <arg name="carla_launch_control" value="$(var carla_launch_control)"/>
+        <arg name="carla_map" value="$(var carla_map)"/>
+        <arg name="sync_mode" value="$(var sync_mode)"/>
+        <arg name="fixed_delta_seconds" value="$(var fixed_delta_seconds)"/>
+        <arg name="use_traffic_manager" value="$(var use_traffic_manager)"/>
+        <arg name="max_real_delta_seconds" value="$(var max_real_delta_seconds)"/>
+        <arg name="tick_follower" value="$(var tick_follower)"/>
+        <arg name="spawn_point_ground_snap" value="$(var spawn_point_ground_snap)"/>
+        <arg name="spawn_point_ground_offset_z" value="$(var spawn_point_ground_offset_z)"/>
+        <arg name="initial_pose_ground_offset_z" value="$(var initial_pose_ground_offset_z)"/>
+        <arg name="ego_attach_timeout" value="$(var ego_attach_timeout)"/>
+        <arg name="force_load_world" value="$(var force_load_world)"/>
+        <arg name="min_positive_throttle" value="$(var min_positive_throttle)"/>
+        <arg name="min_positive_throttle_speed_threshold" value="$(var min_positive_throttle_speed_threshold)"/>
+        <arg name="no_rendering_mode" value="$(var no_rendering_mode)"/>
+        <arg name="map_origin_x" value="$(var map_origin_x)"/>
+        <arg name="map_origin_y" value="$(var map_origin_y)"/>
+        <arg name="publish_ground_truth_objects" value="$(var publish_ground_truth_objects)"/>
+        <arg name="use_light_weight_sensor_mapping" value="$(var use_light_weight_sensor_mapping)"/>
+        <arg name="sensor_kit_name" value="$(var sensor_kit_name)"/>
+        <arg name="sensor_mapping_file" value="$(var sensor_mapping_file)"/>
+        <arg name="render_with_splatsim" value="$(var render_with_splatsim)"/>
+        <arg name="splatsim_render_camera" value="$(var splatsim_render_camera)"/>
+        <arg name="splatsim_render_lidar" value="$(var splatsim_render_lidar)"/>
+        <arg name="splatsim_tileset_path" value="$(var splatsim_tileset_path)"/>
+        <arg name="splatsim_image" value="$(var splatsim_image)"/>
+        <arg name="splatsim_grpc_port" value="$(var splatsim_grpc_port)"/>
+        <arg name="splatsim_lidar_grpc_port" value="$(var splatsim_lidar_grpc_port)"/>
+        <arg name="splatsim_use_sh" value="$(var splatsim_use_sh)"/>
+        <arg name="splatsim_enable_lod" value="$(var splatsim_enable_lod)"/>
+        <arg name="splatsim_device" value="$(var splatsim_device)"/>
+        <arg name="splatsim_restart_container" value="$(var splatsim_restart_container)"/>
+        <arg name="splatsim_compress_format" value="$(var splatsim_compress_format)"/>
+        <arg name="max_wheel_steer_angle_deg" value="$(var max_wheel_steer_angle_deg)"/>
+        <arg name="steering_lag_time_constant" value="$(var steering_lag_time_constant)"/>
+        <arg name="steer_response_exponent" value="$(var steer_response_exponent)"/>
+        <arg name="flatten_steering_curve" value="$(var flatten_steering_curve)"/>
+        <arg name="wake_sleeping_physics" value="$(var wake_sleeping_physics)"/>
+        <arg name="traffic_light.publish" value="$(var traffic_light.publish)"/>
+        <arg name="traffic_light.force_green" value="$(var traffic_light.force_green)"/>
+        <arg name="traffic_light.map_path" value="$(var traffic_light.map_path)"/>
+        <arg name="traffic_light.match_distance" value="$(var traffic_light.match_distance)"/>
+        <arg name="traffic_light.match_ratio" value="$(var traffic_light.match_ratio)"/>
+        <arg name="traffic_light.id_map" value="$(var traffic_light.id_map)"/>
+        <arg name="with_scenario" value="$(var with_scenario)"/>
+        <arg name="scenario_python" value="$(var scenario_python)"/>
+        <arg name="scenario_pip_args" value="$(var scenario_pip_args)"/>
+        <arg name="scenario_overrides" value="$(var scenario_overrides)"/>
+        <arg name="scenario_world_wait_timeout" value="$(var scenario_world_wait_timeout)"/>
+        <arg name="bridge_address" value="$(var bridge_address)"/>
+        <arg name="auto_engage" value="$(var auto_engage)"/>
+        <arg name="initialize_localization" value="$(var initialize_localization)"/>
+        <arg name="require_localization_initialized" value="$(var require_localization_initialized)"/>
+      </include>
     </group>
   </group>
 
