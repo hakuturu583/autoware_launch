@@ -11,7 +11,7 @@
 
   <!-- launch module preset -->
   <arg name="planning_module_preset" default="xx1" description="planning module preset"/>
-  <arg name="param_variant_suffix" default="" description="Suffix appended to the parameter files that have a simulator-specific variant (&quot;_carla&quot; picks mpc_carla.param.yaml, pid_carla.param.yaml and trajectory_velocity_optimizer_carla.param.yaml). Empty keeps the real vehicle&apos;s files"/>
+  <arg name="param_variant_suffix" default="" description="Suffix appended to the parameter files that have a simulator-specific variant (&quot;_carla&quot; picks mpc_carla.param.yaml, pid_carla.param.yaml, trajectory_velocity_optimizer_carla.param.yaml and boundary_departure_checker_carla.param.yaml). Empty keeps the real vehicle&apos;s files"/>
   <arg name="planning_setting" default="rule_based" description="planning setting diffusion_planner / latentdrive / e2e_planner / resworld / rule_based"/>
   <arg name="control_module_preset" default="xx1" description="control module preset"/>
 

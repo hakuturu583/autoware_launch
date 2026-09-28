@@ -1,0 +1,28 @@
+# CARLA variant of boundary_departure_checker.param.yaml.
+#
+# Odaiba's outbound route turns right at lanelet 1371, and the only way there is
+# the right-turn pocket 176324 -> 1523 -> 1512. That pocket is 2.69-3.18 m wide
+# with a road_border 1.41 m from its centreline, so a 1.896 m wide vehicle plus
+# lateral_margin_m may stray only 0.37 m to the right over 117 m -- far tighter
+# than the end-to-end planner holds the lane.
+#
+# handling_type 2 (soft stop) deadlocks there: the ego stops with its own
+# footprint already across the border, so the check never clears and it can
+# never resume. 0 keeps the diagnostic without freezing the run, which is what a
+# closed-loop simulation needs.
+# https://github.com/autowarefoundation/autoware_universe/blob/main/planning/autoware_planning_validator/autoware_planning_validator/README.md
+/**:
+  ros__parameters:
+    boundary_departure_checker:
+      enable: true
+      # 0: publish as-is, 1: last valid, 2: last valid with soft stop
+      handling_type: 0
+      boundary_types: ["road_border"]
+      lateral_margin_m: 0.1
+      longitudinal_margin_m: 1.0
+      max_deceleration_mps2: -4.0
+      max_jerk_mps3: -5.0
+      brake_delay_s: 1.0
+      time_to_departure_cutoff_s: 2.0
+      on_time_buffer_s: 0.20
+      off_time_buffer_s: 0.10

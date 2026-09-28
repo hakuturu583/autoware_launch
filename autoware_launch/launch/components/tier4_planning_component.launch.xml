@@ -20,7 +20,7 @@
   <arg name="planning_input_objects_topic_name" default="/perception/object_recognition/objects"/>
   <arg name="planning_input_pointcloud_topic_name" default="/perception/obstacle_segmentation/pointcloud"/>
 
-  <arg name="param_variant_suffix" default="" description="Suffix appended to the parameter files that have a simulator-specific variant (&quot;_carla&quot; picks mpc_carla.param.yaml, pid_carla.param.yaml and trajectory_velocity_optimizer_carla.param.yaml). Empty keeps the real vehicle&apos;s files"/>
+  <arg name="param_variant_suffix" default="" description="Suffix appended to the parameter files that have a simulator-specific variant (&quot;_carla&quot; picks mpc_carla.param.yaml, pid_carla.param.yaml, trajectory_velocity_optimizer_carla.param.yaml and boundary_departure_checker_carla.param.yaml). Empty keeps the real vehicle&apos;s files"/>
   <!-- Diffusion Planner Trajectory Optimizer Plugins-->
   <let name="neural_net_planner_config_path" value="$(find-pkg-share autoware_launch)/config/planning/neural_net_planner"/>
   <let name="optimizer_plugins_config_path" value="$(var neural_net_planner_config_path)/trajectory_optimizer_plugins"/>
@@ -145,7 +145,7 @@
     <arg name="planning_validator_trajectory_checker_param_path" value="$(var common_config_path)/planning_validator/trajectory_checker.param.yaml"/>
     <arg name="planning_validator_intersection_collision_checker_param_path" value="$(var common_config_path)/planning_validator/intersection_collision_checker.param.yaml"/>
     <arg name="planning_validator_rear_collision_checker_param_path" value="$(var common_config_path)/planning_validator/rear_collision_checker.param.yaml"/>
-    <arg name="planning_validator_boundary_departure_checker_param_path" value="$(var common_config_path)/planning_validator/boundary_departure_checker.param.yaml"/>
+    <arg name="planning_validator_boundary_departure_checker_param_path" value="$(var common_config_path)/planning_validator/boundary_departure_checker$(var param_variant_suffix).param.yaml"/>
 
     <!-- trajectory generator params -->
     <arg name="diffusion_planner_param_path" value="$(var neural_net_planner_config_path)/diffusion_planner.param.yaml"/>
