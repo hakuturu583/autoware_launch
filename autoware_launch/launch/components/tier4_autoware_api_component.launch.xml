@@ -28,7 +28,10 @@
   </group>
 
   <!-- TIER IV -->
-  <group if="$(var launch_tier4_api)">
+  <!-- Disabled for CARLA closed-loop: the extension pulls the full ad_api_adaptor stack
+       (autoware_iv_*_api_adaptor, awapi_awiv_adapter, rosbridge_server, ...) not present
+       in this AWF-based workspace. Route/engage use the core default_adapi above. -->
+  <group if="false">
     <include file="$(find-pkg-share tier4_autoware_api_extension_launch)/launch/tier4_autoware_api_extension.launch.xml">
       <arg name="rosbridge_enabled" value="$(var rosbridge_enabled)"/>
       <arg name="rosbridge_max_message_size" value="$(var rosbridge_max_message_size)"/>

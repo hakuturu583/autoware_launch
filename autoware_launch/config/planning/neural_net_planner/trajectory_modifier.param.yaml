@@ -15,8 +15,8 @@
 
     # Stop Point Fixer Plugin Parameters
     stop_point_fixer:
-      force_stop_long_stopped_trajectories: true     # Force zero velocity trajectory for trajectories with long stops
-      force_stop_close_stopped_trajectories: true    # Force zero velocity trajectory for trajectories with stops close to ego
+      force_stop_long_stopped_trajectories: false    # disabled for ResWorld cold-start: the model's launch crawl from standstill is a short trajectory that stops near the ego, and forcing it to zero velocity prevented the ego from ever rolling (so the model never saw the motion it needs to ramp up)
+      force_stop_close_stopped_trajectories: false   # (same reason) let the crawl through so the ego rolls and the model ramps to cruising speed
       velocity_threshold: 0.25 # [m/s]
       min_distance_threshold: 1.0 # [m]
       min_stop_duration: 0.5 # [s]
