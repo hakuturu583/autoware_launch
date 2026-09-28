@@ -2,7 +2,9 @@
 # the real vehicle's tuning in mpc.param.yaml is left untouched; keep the two in
 # step when the shared values change.
 #
-# Only the steering-rate weights differ from the real vehicle's file.
+# The steering-rate weights, the steering-rate limits, the lateral-error
+# weights and the actuator model differ from the real vehicle's file;
+# everything else is shared.
 /**:
   ros__parameters:
     # -- system --
@@ -24,11 +26,35 @@
     qp_solver_type: "osqp"                       # optimization solver option (unconstraint_fast or osqp)
     mpc_prediction_horizon: 50                   # prediction horizon step
     mpc_prediction_dt: 0.1                       # prediction horizon period [s]
-    mpc_weight_lat_error: 1.0                    # lateral error weight in matrix Q
+    # The weights that carry a *_squared_vel term are multiplied by the square of
+    # the reference speed (mpc.cpp: Q_adaptive(1,1) += ref_vx_squared * ...), so at
+    # the 10.5 m/s this route reaches they dominate whatever the base term says.
+    # With the real vehicle's numbers that came to lateral error 1.0 against
+    # heading error 33.0 -- so holding the ego's nose parallel to the trajectory
+    # was worth thirty times more than being on it, and the ego tracked a metre
+    # and a half off the lane centre without objecting. Measured coming out of the
+    # R = 21 m corner at lanelet 190425 into the straight at 1508: the offset swung
+    # +1.10 m to -0.74 m over four seconds while the controller commanded 0.2 deg.
+    # Raising the lateral term and easing the heading one leaves 4.0 against 11.0
+    # at that speed, which still keeps the nose straight without ignoring where
+    # the vehicle is.
+    mpc_weight_lat_error: 4.0                    # lateral error weight in matrix Q
+    # The real vehicle leaves this at 0.0 and lets heading_error_squared_vel carry
+    # the term, but that is multiplied by the square of the speed, so it is worth
+    # 11 at 10.5 m/s and 0.9 at 3 m/s. With the lateral term raised to 4.0 for the
+    # sake of the fast stretches, nothing held the ego's heading at low speed and
+    # it cut corners to reach the centreline by the shortest path. A base of 1.0
+    # gives 4.0 : 1.9 : 3.25 (lateral : heading : steering) at 3 m/s while leaving
+    # 4.0 : 12.0 : 28.5 at 10.5 m/s, so it corrects the slow end alone.
     mpc_weight_heading_error: 0.0                # heading error weight in matrix Q
-    mpc_weight_heading_error_squared_vel: 0.3    # heading error * velocity weight in matrix Q
+    mpc_weight_heading_error_squared_vel: 0.1    # heading error * velocity weight in matrix Q
     mpc_weight_steering_input: 1.0               # steering error weight in matrix R
-    mpc_weight_steering_input_squared_vel: 1.00  # steering error * velocity weight in matrix R
+    # 1.00 is the real vehicle's value, and it is four times what the same file
+    # uses on gentle curves (0.25 below). It is a comfort term -- it buys a
+    # steadier wheel the faster you go -- and at 10 m/s it dominates the lateral
+    # error term, so the cheapest trajectory is the one that does not turn.
+    # Matched to the gentle-curve value so the two regimes agree.
+    mpc_weight_steering_input_squared_vel: 0.25  # steering error * velocity weight in matrix R
     mpc_weight_lat_jerk: 0.1                     # lateral jerk weight in matrix R
     mpc_weight_steer_rate: 1.0                   # steering rate weight in matrix R
     # 0.0 (the real vehicle's value) leaves the lateral loop undamped against the
@@ -38,9 +64,21 @@
     # so the ego runs wide and stalls at full lock. 1.0 drove the outbound route
     # to within 0.5 m of the goal.
     mpc_weight_steer_acc: 0.000001               # steering angular acceleration weight in matrix R
-    mpc_low_curvature_weight_lat_error: 0.05                   # lateral error weight in matrix Q in low curvature point
+    # The real vehicle's 0.05 lets the ego drift on a gentle curve, where holding
+    # the centre matters less than riding smoothly. On this route that is not a
+    # special case but the normal one: mpc_low_curvature_thresh_curvature is
+    # 0.03 /m, i.e. a radius of 33 m, and the Odaiba legs turn at 120-160 m. Of
+    # the eight lanelets around the worst corner, seven are on this side of the
+    # threshold -- so the ego drove almost the whole route with its lateral error
+    # weighted 0.05 against 2.25 of terms that penalise steering, and the cheapest
+    # answer was to go straight. Measured on lanelet 86: the corner asks for
+    # 1.34 deg of steering and the controller commanded 0.03. Raised to the same
+    # 1.0 the high-curvature side uses, so a gentle curve is still followed.
+    mpc_low_curvature_weight_lat_error: 1.0                    # lateral error weight in matrix Q in low curvature point
+    # matched to the high-curvature side, for the reason given above.
     mpc_low_curvature_weight_heading_error: 0.0                # heading error weight in matrix Q in low curvature point
-    mpc_low_curvature_weight_heading_error_squared_vel: 0.3    # heading error * velocity weight in matrix Q in low curvature point
+    # matched to the high-curvature side, for the reason given above.
+    mpc_low_curvature_weight_heading_error_squared_vel: 0.1    # heading error * velocity weight in matrix Q in low curvature point
     mpc_low_curvature_weight_steering_input: 1.0               # steering error weight in matrix R in low curvature point
     mpc_low_curvature_weight_steering_input_squared_vel: 0.25  # steering error * velocity weight in matrix R in low curvature point
     mpc_low_curvature_weight_lat_jerk: 0.0                     # lateral jerk weight in matrix R in low curvature point
@@ -58,11 +96,53 @@
 
     # -- vehicle model --
     vehicle_model_type: "kinematics" # vehicle model type for mpc prediction. option is kinematics, kinematics_no_delay, and dynamics
-    input_delay: 0.3                 # steering input delay time for delay compensation
-    vehicle_model_steer_tau: 0.3     # steering dynamics time constant (1d approximation) [s]
+    # Measured on the CARLA 0.10 byd, not assumed: the command log and the
+    # steering report were cross-correlated for the dead time, and the tau fitted
+    # from how far the response closes the gap to a held command in one time
+    # constant. Both settled by 1200 samples and did not move over 3600:
+    #
+    #   dead time  0.100 s   (the real vehicle's file assumes 0.300)
+    #   tau        0.393 s   (it assumes 0.300)
+    #
+    # The total is close to the assumed 0.6 s, but the split is not, and the
+    # split is what the controller acts on. Dead time is time in which nothing
+    # happens, so the MPC simply issues its command that much earlier -- 0.3 s is
+    # 3.2 m of anticipation at 10.5 m/s where 1.1 m is the truth, and the ego
+    # both turns in and straightens about two metres early. Tau is the actuator
+    # inside the prediction model, and under-stating it makes the controller
+    # expect the wheel to settle sooner than it does. Early out and slow to
+    # settle is what running wide out of a corner is made of: measured 0.57 m of
+    # tracking error through the R = 21 m corner at lanelet 190425, against 1-5 cm
+    # on the straights either side.
+    input_delay: 0.1                 # steering input delay time for delay compensation
+    vehicle_model_steer_tau: 0.4     # steering dynamics time constant (1d approximation) [s]
     steer_rate_lim_dps_list_by_curvature: [20.0, 20.0, 20.0]            # steering angle rate limit list depending on curvature [deg/s]
     curvature_list_for_steer_rate_lim: [0.001, 0.002, 0.01]              # curvature list for steering angle rate limit interpolation in ascending order [/m]
-    steer_rate_lim_dps_list_by_velocity: [18.0,  18.0,   15.0,   12.0,   5.0,  3.25,  2.5 ,  2.5 ,  2.5]  # steering angle rate limit list depending on velocity [deg/s] [72, 72, 36, 18, 9, 3.6, 3.6]
+    # Only the high-speed tail differs from the real vehicle's list, which reads
+    # [18, 18, 15, 12, 5, 3.25, 2.5, 2.5, 2.5]: above 8 m/s it allows 2.5 deg/s,
+    # and this route needs more than that once the neural planner reaches its own
+    # speeds. Taking the bicycle model at the measured 5.4 m wheelbase and
+    # building the tyre angle over one vehicle length of travel -- a demanding
+    # transition, so an upper bound on what is needed:
+    #
+    #   R = 120 m at 9.5 m/s ->  2.6 deg ->  4.5 deg/s
+    #   R =  50 m at 9.5 m/s ->  6.2 deg -> 10.8 deg/s
+    #
+    # (The speeds are what the lateral-acceleration limit of 2.0 m/s^2, enabled in
+    # trajectory_velocity_optimizer_carla.param.yaml, leaves for each radius, so
+    # this is the steering needed *after* the ego has slowed for the corner.) On
+    # the Odaiba leg the ego reached 9.4 m/s on lanelets of R = 120 m, where 2.5
+    # deg/s is 56% of what the corner asked: the MPC saturated against the clamp,
+    # wound up, and the ego weaved off the road after 852 m with
+    # planning_validator reporting an uncrossable boundary.
+    #
+    # The low-speed values are the real vehicle's, deliberately. Raising them too
+    # (a first attempt used 40 deg/s below 4 m/s) destabilises the ego in the
+    # museum forecourt, whose lanelets turn at R = 8.5-10 m: the steer-response
+    # inversion that undoes CARLA 0.10's quadratic steering has a high gain near
+    # centre, and with the clamp lifted the command slewed hard enough to leave
+    # the lane within 18 m of the spawn. The clamp is doing real work down there.
+    steer_rate_lim_dps_list_by_velocity: [18.0,  18.0,   15.0,   12.0,  12.0,  12.0,  12.0 ,  12.0 ,  12.0]  # steering angle rate limit list depending on velocity [deg/s]
     velocity_list_for_steer_rate_lim:    [0.0,   1.388,  2.778,  4.167,  5.556,   6.944,  8.333,  9.722,  11.11] # velocity list for steering angle rate limit interpolation in ascending order [m/s]
 
     # -- lowpass filter for noise reduction --

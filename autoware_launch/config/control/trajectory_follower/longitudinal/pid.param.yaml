@@ -9,28 +9,9 @@
     enable_keep_stopped_until_steer_convergence: false
 
     # state transition
-    # CARLA/OnePlanner variant. The neural planner's output from a standstill is
-    # a near-zero trajectory -- it predicts the standstill it is in -- and the
-    # controller leaves ControlState::STOPPED only once the distance to its stop
-    # point exceeds drive_state_stop_dist. Below that the controller holds the
-    # stop, the ego never moves, and the planner keeps predicting it: a deadlock
-    # the ego cannot leave on its own, seen as 7000 control cycles at velocity 0
-    # and acceleration -1.5 without the ego moving.
-    #
-    # How short that first trajectory is depends on where the ego stands: 0.45 m
-    # at one spawn, 0.14 m at another on the same route. Any threshold above the
-    # shortest of them re-locks the ego somewhere, so this is set below all of
-    # them rather than tuned to one. What it gives up is the controller's ability
-    # to hold a stop against a trajectory that is merely short -- on this stack
-    # the planner asks for a stop by putting a zero-velocity point on the
-    # trajectory, which is checked separately and still holds the ego.
-    #
-    # Measured: at 0.05 the ego departs immediately and the planner opens up from
-    # 0.14 m to 27 m of trajectory and 5.4 m/s within 35 s.
-    drive_state_stop_dist: 0.05
+    drive_state_stop_dist: 0.5
     drive_state_offset_stop_dist: 1.0
-    # Kept just under drive_state_stop_dist, as the vehicle's own pair is.
-    stopping_state_stop_dist: 0.04
+    stopping_state_stop_dist: 0.49
     stopped_state_entry_duration_time: 0.1
     stopped_state_entry_vel: 0.01
     stopped_state_entry_acc: 0.1
