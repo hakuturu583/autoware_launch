@@ -1,0 +1,23 @@
+/**:
+  ros__parameters:
+    # The CARLA 0.10 `vehicle.byd.j6gen2` chassis, so Autoware plans for the car it
+    # is actually driving. Do not reuse sample_vehicle here: that models a Lincoln
+    # MKZ (wheel_base 2.79 m) and this chassis is nearly twice as long, which makes
+    # every commanded tyre angle come out at about half the intended curvature.
+    #
+    # Extents are carla.Actor.bounding_box.extent doubled: 7.26 x 2.47 x 3.07 m.
+    # wheel_base is measured, not read: CARLA 0.10 reports no wheel positions
+    # (WheelPhysicsControl.location is all zeros). Holding a fixed steer at 2 m/s
+    # and taking curvature from the transforms gives 5.49 / 5.42 / 5.37 / 5.39 m at
+    # steer 0.15 / 0.30 / 0.50 / -0.30 once the chassis's squared steer response is
+    # accounted for (see autoware_carla_interface config/vehicle_physics.yaml).
+    wheel_radius: 0.383 # [m] as written onto the CARLA wheels
+    wheel_width: 0.235 # [m]
+    wheel_base: 5.4 # [m] between front wheel center and rear wheel center
+    wheel_tread: 2.0 # [m] between left wheel center and right wheel center
+    front_overhang: 0.95 # [m] -> 5.4 + 0.95 + 0.91 = 7.26 m, the measured length
+    rear_overhang: 0.91 # [m]
+    left_overhang: 0.235 # [m] -> 2.0 + 2 * 0.235 = 2.47 m, the measured width
+    right_overhang: 0.235 # [m]
+    vehicle_height: 3.07 # [m]
+    max_steer_angle: 0.64 # [rad] = 36.67 deg, the wheels' max_steer_angle in CARLA
