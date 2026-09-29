@@ -99,6 +99,7 @@
   <arg name="pointcloud_map_file" default="pointcloud_map.pcd" description="pointcloud map file name"/>
   <!-- Perception -->
   <arg name="traffic_light_namespace" default="[camera0,camera2,camera5,camera6]" description="traffic light recognition namespace"/>
+  <arg name="use_traffic_light_recognition" default="true" description="launch the camera traffic light recognition pipeline; turn it off when the simulator publishes the signals itself"/>
   <!-- Control -->
   <!-- Vehicle -->
   <arg name="launch_vehicle_interface" default="false"/>
@@ -221,7 +222,7 @@
       <arg name="traffic_light_recognition/use_high_accuracy_detection" value="false"/>
       <arg name="traffic_light_recognition/camera_namespaces" value="$(var traffic_light_namespace)"/>
       <arg name="perception_mode" value="lidar"/>
-      <arg name="use_traffic_light_recognition" value="true"/>
+      <arg name="use_traffic_light_recognition" value="$(var use_traffic_light_recognition)"/>
       <arg name="traffic_light_recognition/enable_fine_detection" value="false"/>
       <arg name="traffic_light_recognition/fusion_only" value="false"/>
       <arg name="lidar_detection_model" value="centerpoint"/>
