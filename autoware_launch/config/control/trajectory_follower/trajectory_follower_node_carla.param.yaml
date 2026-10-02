@@ -1,0 +1,20 @@
+# CARLA variant of trajectory_follower_node.param.yaml. Selected with
+# param_variant_suffix:=_carla so the real vehicle's tuning in
+# trajectory_follower_node.param.yaml is left untouched; keep the two in step
+# when the shared values change.
+#
+# Only trajectory_reference_mode differs. The temporal mode makes
+# MpcLateralController::isValidTrajectory() require time_from_start to increase
+# strictly from point to point, but the planning stack that drives the CARLA
+# closed loop leaves time_from_start at 0 on every trajectory point. Every
+# trajectory is then rejected with "Trajectory is invalid!! stop computing.",
+# the controller publishes no control command, and
+# operation_mode_transition_manager never reports autonomous as available, so
+# the ego can never be engaged. The spatial mode derives the timing from the
+# geometry instead and does not read time_from_start.
+/**:
+  ros__parameters:
+    ctrl_period: 0.03
+    timeout_thr_sec: 0.5
+    trajectory_reference_mode: "spatial"  # "spatial" or "temporal"
+    cyclic_message_timeout_thr_sec: 0.9
