@@ -1,3 +1,13 @@
 {
-  "words": ["rois"]
+  "words": [
+    "latentdrive",
+    "resworld",
+    "rois",
+    "splatsim",
+    "tileset",
+    "usdz"
+  ],
+  "ignoreRegExpList": [
+    "&[a-zA-Z]+;"
+  ]
 }
