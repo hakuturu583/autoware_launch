@@ -92,6 +92,12 @@
   <arg name="sensing" default="true" description="launch sensing"/>
   <arg name="localization" default="true" description="launch localization"/>
   <arg name="perception" default="true" description="launch perception"/>
+  <!-- Off leaves tracking and prediction running on whatever fills
+       /perception/object_recognition/detection/objects (the interface's own
+       publish_ground_truth_objects, say), so a closed loop needs no detection
+       model and no TensorRT engine. "auto" is autoware.launch.xml's own rule:
+       off for resworld, on otherwise. -->
+  <arg name="launch_detection" default="auto" description="launch the object detection stage: true / false / auto"/>
   <arg name="planning" default="true" description="launch planning"/>
   <arg name="control" default="true" description="launch control"/>
   <!-- Map -->
@@ -203,6 +209,7 @@
       <arg name="launch_sensing" value="$(var sensing)"/>
       <arg name="launch_localization" value="$(var localization)"/>
       <arg name="launch_perception" value="$(var perception)"/>
+      <arg name="launch_detection" value="$(var launch_detection)"/>
       <arg name="launch_planning" value="$(var planning)"/>
       <arg name="launch_control" value="$(var control)"/>
       <!-- Global parameters -->
